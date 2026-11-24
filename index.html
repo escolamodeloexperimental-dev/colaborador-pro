@@ -1,1 +1,2181 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0f172a" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="description" content="Colaborador Pro — Gestão de Turnos & Pagamentos conectada ao Google Sheets." />
+  <title>Colaborador Pro — Turnos &amp; Pagamentos</title>
 
+  <!-- Fonte Inter para leitura de alta legibilidade -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+
+  <!-- Tailwind CSS via CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+          }
+        }
+      }
+    };
+  </script>
+
+  <style>
+    body {
+      background-color: #f8fafc;
+      color: #0f172a;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .animate-slide-up {
+      animation: slideUp 0.2s ease-out forwards;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    .animate-fade-in {
+      animation: fadeIn 0.16s ease-out forwards;
+    }
+
+    /* Barra de rolagem discreta na navegação mobile */
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col font-sans antialiased overflow-x-hidden selection:bg-emerald-100 selection:text-emerald-950">
+
+  <!-- =====================================================================
+       CABEÇALHO FIXO (AZUL-MARINHO / ARDÓSIA #0f172a)
+       ===================================================================== -->
+  <header class="sticky top-0 z-30 bg-[#0f172a] text-white shadow-lg border-b border-slate-800">
+    <div class="max-w-5xl mx-auto px-3.5 sm:px-5 py-3 flex items-center justify-between gap-2.5">
+      <!-- Identidade Visual -->
+      <div class="flex items-center gap-3 min-w-0">
+        <div class="w-10 h-10 rounded-xl bg-emerald-600/20 border border-emerald-500/40 flex items-center justify-center shrink-0">
+          <svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        </div>
+        <div class="min-w-0">
+          <h1 class="text-base sm:text-lg font-extrabold tracking-tight text-white truncate">
+            Colaborador Pro
+          </h1>
+          <p class="text-[11px] sm:text-xs text-slate-300 truncate">
+            Gestão de Turnos &amp; Pagamentos
+          </p>
+        </div>
+      </div>
+
+      <!-- Status da Conexão + Botão Sincronizar -->
+      <div class="flex items-center gap-2 shrink-0">
+        <button
+          type="button"
+          onclick="switchTab('config')"
+          id="connectionStatusBadge"
+          title="Clique para configurar a conexão com a planilha"
+          class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-[11px] sm:text-xs font-bold bg-amber-500/15 text-amber-300 border border-amber-500/35 hover:bg-amber-500/25 transition cursor-pointer"
+        >
+          <span id="connectionStatusDot" class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+          <span id="connectionStatusText">Modo Simulação Local</span>
+        </button>
+
+        <button
+          type="button"
+          id="btnQuickSync"
+          onclick="handleQuickSync()"
+          title="Sincronizar dados agora"
+          class="p-2 sm:px-3 sm:py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 active:scale-95 border border-slate-700 text-slate-200 text-xs font-bold inline-flex items-center gap-1.5 transition cursor-pointer"
+        >
+          <svg id="syncIcon" class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+          </svg>
+          <span class="hidden sm:inline">Sincronizar</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Barra de Navegação com 4 Abas -->
+    <nav class="bg-white text-slate-600 border-b border-slate-200" aria-label="Navegação Principal">
+      <div class="max-w-5xl mx-auto px-2 sm:px-4 grid grid-cols-4 gap-0.5">
+        <!-- Aba 1: Novo Turno (Ativa por padrão) -->
+        <button
+          type="button"
+          id="tab-btn-novo"
+          onclick="switchTab('novo')"
+          class="tab-btn py-3 px-1.5 sm:px-3 text-[11px] sm:text-sm font-extrabold border-b-2 border-[#059669] text-[#059669] flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-1.5 transition cursor-pointer"
+        >
+          <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2.4" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+          </svg>
+          <span class="truncate max-w-full">Novo Turno</span>
+        </button>
+
+        <!-- Aba 2: Turnos & Pagamentos -->
+        <button
+          type="button"
+          id="tab-btn-turnos"
+          onclick="switchTab('turnos')"
+          class="tab-btn py-3 px-1.5 sm:px-3 text-[11px] sm:text-sm font-semibold border-b-2 border-transparent text-slate-500 hover:text-slate-900 flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-1.5 transition cursor-pointer"
+        >
+          <div class="flex items-center gap-1">
+            <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2.1" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+            </svg>
+            <span id="openCountBadge" class="px-1.5 py-0.2 text-[10px] sm:text-[11px] font-extrabold rounded-full bg-amber-100 text-[#d97706] border border-amber-300">0</span>
+          </div>
+          <span class="truncate max-w-full">Turnos &amp; Pagamentos</span>
+        </button>
+
+        <!-- Aba 3: Resumo Financeiro -->
+        <button
+          type="button"
+          id="tab-btn-financeiro"
+          onclick="switchTab('financeiro')"
+          class="tab-btn py-3 px-1.5 sm:px-3 text-[11px] sm:text-sm font-semibold border-b-2 border-transparent text-slate-500 hover:text-slate-900 flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-1.5 transition cursor-pointer"
+        >
+          <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2.1" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+          </svg>
+          <span class="truncate max-w-full">Resumo Financeiro</span>
+        </button>
+
+        <!-- Aba 4: Configuração & Script -->
+        <button
+          type="button"
+          id="tab-btn-config"
+          onclick="switchTab('config')"
+          class="tab-btn py-3 px-1.5 sm:px-3 text-[11px] sm:text-sm font-semibold border-b-2 border-transparent text-slate-500 hover:text-slate-900 flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-1.5 transition cursor-pointer"
+        >
+          <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2.1" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+          </svg>
+          <span class="truncate max-w-full">Configuração &amp; Script</span>
+        </button>
+      </div>
+    </nav>
+  </header>
+
+  <!-- =====================================================================
+       CONTEÚDO PRINCIPAL
+       ===================================================================== -->
+  <main class="flex-1 max-w-5xl w-full mx-auto px-3 sm:px-5 py-5 pb-32">
+
+    <!-- ===================================================================
+         ABA 1: NOVO TURNO
+         =================================================================== -->
+    <section id="view-novo" class="tab-view space-y-5 animate-fade-in">
+      <div class="bg-white rounded-2xl border border-slate-200 shadow-xs p-4 sm:p-6">
+        <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-4 mb-5">
+          <div>
+            <h2 class="text-lg sm:text-xl font-extrabold text-[#0f172a]">Registrar Novo Turno</h2>
+            <p class="text-xs text-slate-500 mt-0.5">Toque na cuidadora, selecione o atalho de escala e confirme o cálculo.</p>
+          </div>
+          <span class="text-xs font-bold px-3 py-1 rounded-full bg-emerald-50 text-[#059669] border border-emerald-200">
+            Tarifa: R$ 10,00 / hora
+          </span>
+        </div>
+
+        <form id="shiftForm" onsubmit="handleSaveShift(event)" class="space-y-6">
+
+          <!-- SEÇÃO 1: Seleção da Cuidadora / Responsável -->
+          <div>
+            <div class="flex items-center justify-between mb-2.5">
+              <label class="text-sm font-bold text-[#0f172a]">
+                1. Cuidadora / Responsável <span class="text-rose-600">*</span>
+              </label>
+              <span class="text-xs text-slate-500">
+                Selecionada: <strong id="selectedPersonLabel" class="text-[#059669]">Laine</strong>
+              </span>
+            </div>
+
+            <div id="collaboratorGrid" class="grid grid-cols-3 sm:grid-cols-5 gap-2.5">
+              <!-- Botões táteis gerados via JavaScript -->
+            </div>
+          </div>
+
+          <!-- SEÇÃO 2: Atalhos de Plantão (1 toque) -->
+          <div class="bg-slate-50 rounded-2xl p-3.5 sm:p-4 border border-slate-200">
+            <div class="flex flex-wrap items-center justify-between gap-1 mb-3">
+              <span class="text-sm font-bold text-[#0f172a] flex items-center gap-1.5">
+                <svg class="w-4 h-4 text-[#059669]" fill="none" stroke="currentColor" stroke-width="2.3" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+                2. Atalhos de Plantão (1 toque)
+              </span>
+              <span class="text-[11px] text-slate-500">Preenche entrada e saída automaticamente</span>
+            </div>
+
+            <div class="grid grid-cols-2 sm:grid-cols-5 gap-2.5">
+              <button
+                type="button"
+                data-preset="noturno10"
+                onclick="applyShiftPreset('noturno10', '20:00', '06:00', 1)"
+                class="preset-btn text-left p-3 rounded-xl bg-emerald-50 border-2 border-[#059669] shadow-2xs active:scale-[0.98] transition cursor-pointer"
+              >
+                <span class="block text-xs font-extrabold text-[#0f172a]">Noturno 10h</span>
+                <span class="block text-[11px] font-bold text-[#059669] mt-0.5">20:00 → 06:00</span>
+                <span class="block text-[10px] text-slate-500 mt-0.5">Dia seguinte</span>
+              </button>
+
+              <button
+                type="button"
+                data-preset="noturno11"
+                onclick="applyShiftPreset('noturno11', '19:00', '06:00', 1)"
+                class="preset-btn text-left p-3 rounded-xl bg-white hover:bg-emerald-50/70 border border-slate-200 hover:border-[#059669] active:scale-[0.98] transition cursor-pointer"
+              >
+                <span class="block text-xs font-extrabold text-[#0f172a]">Noturno 11h</span>
+                <span class="block text-[11px] font-bold text-[#059669] mt-0.5">19:00 → 06:00</span>
+                <span class="block text-[10px] text-slate-500 mt-0.5">Dia seguinte</span>
+              </button>
+
+              <button
+                type="button"
+                data-preset="noturno12"
+                onclick="applyShiftPreset('noturno12', '18:00', '06:00', 1)"
+                class="preset-btn text-left p-3 rounded-xl bg-white hover:bg-emerald-50/70 border border-slate-200 hover:border-[#059669] active:scale-[0.98] transition cursor-pointer"
+              >
+                <span class="block text-xs font-extrabold text-[#0f172a]">Noturno 12h</span>
+                <span class="block text-[11px] font-bold text-[#059669] mt-0.5">18:00 → 06:00</span>
+                <span class="block text-[10px] text-slate-500 mt-0.5">Dia seguinte</span>
+              </button>
+
+              <button
+                type="button"
+                data-preset="diurno12"
+                onclick="applyShiftPreset('diurno12', '07:00', '19:00', 0)"
+                class="preset-btn text-left p-3 rounded-xl bg-white hover:bg-emerald-50/70 border border-slate-200 hover:border-[#059669] active:scale-[0.98] transition cursor-pointer"
+              >
+                <span class="block text-xs font-extrabold text-[#0f172a]">Diurno 12h</span>
+                <span class="block text-[11px] font-bold text-[#059669] mt-0.5">07:00 → 19:00</span>
+                <span class="block text-[10px] text-slate-500 mt-0.5">Mesmo dia</span>
+              </button>
+
+              <button
+                type="button"
+                data-preset="plantao24"
+                onclick="applyShiftPreset('plantao24', '07:00', '07:00', 1)"
+                class="preset-btn col-span-2 sm:col-span-1 text-left p-3 rounded-xl bg-white hover:bg-emerald-50/70 border border-slate-200 hover:border-[#059669] active:scale-[0.98] transition cursor-pointer"
+              >
+                <span class="block text-xs font-extrabold text-[#0f172a]">Plantão 24h</span>
+                <span class="block text-[11px] font-bold text-[#059669] mt-0.5">07:00 → 07:00</span>
+                <span class="block text-[10px] text-slate-500 mt-0.5">Dia seguinte</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- SEÇÃO 3: Datas, Horários e Notas -->
+          <div class="space-y-4">
+            <label class="block text-sm font-bold text-[#0f172a]">
+              3. Datas, Horários e Observações <span class="text-rose-600">*</span>
+            </label>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+              <!-- Bloco Entrada -->
+              <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 space-y-2.5">
+                <span class="text-xs font-extrabold uppercase tracking-wider text-[#0f172a] flex items-center gap-1.5">
+                  <span class="w-2 h-2 rounded-full bg-[#059669]"></span>
+                  Entrada (Início)
+                </span>
+                <div class="grid grid-cols-2 gap-2.5">
+                  <div>
+                    <label for="dataEntrada" class="block text-xs font-semibold text-slate-600 mb-1">Data Entrada</label>
+                    <input
+                      type="date"
+                      id="dataEntrada"
+                      required
+                      oninput="handleManualDateTimeChange()"
+                      onchange="handleManualDateTimeChange()"
+                      class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm font-semibold text-[#0f172a] focus:border-[#059669] focus:ring-2 focus:ring-emerald-500/20 outline-hidden"
+                    />
+                  </div>
+                  <div>
+                    <label for="horaEntrada" class="block text-xs font-semibold text-slate-600 mb-1">Hora Entrada</label>
+                    <input
+                      type="time"
+                      id="horaEntrada"
+                      required
+                      oninput="handleManualDateTimeChange()"
+                      onchange="handleManualDateTimeChange()"
+                      class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm font-semibold text-[#0f172a] focus:border-[#059669] focus:ring-2 focus:ring-emerald-500/20 outline-hidden"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <!-- Bloco Saída -->
+              <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 space-y-2.5">
+                <span class="text-xs font-extrabold uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
+                  <span class="w-2 h-2 rounded-full bg-slate-500"></span>
+                  Saída (Término)
+                </span>
+                <div class="grid grid-cols-2 gap-2.5">
+                  <div>
+                    <label for="dataSaida" class="block text-xs font-semibold text-slate-600 mb-1">Data Saída</label>
+                    <input
+                      type="date"
+                      id="dataSaida"
+                      required
+                      oninput="handleManualDateTimeChange()"
+                      onchange="handleManualDateTimeChange()"
+                      class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm font-semibold text-[#0f172a] focus:border-[#059669] focus:ring-2 focus:ring-emerald-500/20 outline-hidden"
+                    />
+                  </div>
+                  <div>
+                    <label for="horaSaida" class="block text-xs font-semibold text-slate-600 mb-1">Hora Saída</label>
+                    <input
+                      type="time"
+                      id="horaSaida"
+                      required
+                      oninput="handleManualDateTimeChange()"
+                      onchange="handleManualDateTimeChange()"
+                      class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm font-semibold text-[#0f172a] focus:border-[#059669] focus:ring-2 focus:ring-emerald-500/20 outline-hidden"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Campo Notas / Intercorrências -->
+            <div>
+              <label for="notasInput" class="block text-xs font-bold text-slate-700 mb-1.5">
+                Notas / Intercorrências <span class="font-normal text-slate-400">(opcional)</span>
+              </label>
+              <textarea
+                id="notasInput"
+                rows="2"
+                placeholder="Ex: Plantão tranquilo, medicação administrada no horário..."
+                class="w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm text-[#0f172a] focus:border-[#059669] focus:ring-2 focus:ring-emerald-500/20 outline-hidden resize-none"
+              ></textarea>
+            </div>
+          </div>
+
+          <!-- Painel Verde de Prévia em Tempo Real -->
+          <div id="liveCalcPanel" class="rounded-2xl p-4 sm:p-5 bg-emerald-50 border-2 border-emerald-300 shadow-2xs transition-colors">
+            <div id="liveCalcValid" class="grid grid-cols-1 sm:grid-cols-3 items-center gap-3 sm:gap-4">
+              <div>
+                <span class="block text-[11px] font-bold uppercase tracking-wider text-emerald-900">Duração Calculada</span>
+                <span id="previewDuration" class="text-2xl font-extrabold text-[#0f172a]">10h 00min</span>
+              </div>
+
+              <div class="sm:text-center sm:border-x sm:border-emerald-200 sm:px-3">
+                <span class="block text-[11px] font-bold uppercase tracking-wider text-emerald-900">Base de Cálculo</span>
+                <span class="text-base font-bold text-slate-700">R$ 10,00 / hora</span>
+              </div>
+
+              <div class="sm:text-right">
+                <span class="block text-[11px] font-bold uppercase tracking-wider text-emerald-900">Valor do Plantão</span>
+                <span id="previewValue" class="text-2xl sm:text-3xl font-extrabold text-[#059669]">R$ 100,00</span>
+              </div>
+            </div>
+
+            <!-- Mensagem de validação caso saída <= entrada -->
+            <div id="liveCalcError" class="hidden flex items-center gap-2.5 text-rose-700">
+              <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+              <span class="text-xs sm:text-sm font-bold">
+                A data e hora de saída devem ser posteriores à data e hora de entrada.
+              </span>
+            </div>
+          </div>
+
+          <!-- Botão Principal Registrar Plantão -->
+          <button
+            type="submit"
+            id="btnSaveShift"
+            class="w-full py-4 px-6 rounded-2xl bg-[#059669] hover:bg-emerald-700 active:scale-[0.99] disabled:opacity-50 disabled:pointer-events-none text-white font-extrabold text-base shadow-lg shadow-emerald-600/20 flex items-center justify-center gap-2.5 transition cursor-pointer"
+          >
+            <svg id="btnSaveSpinner" class="hidden w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+            </svg>
+            <svg id="btnSaveCheck" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+            </svg>
+            <span id="btnSaveLabel">Registrar Plantão</span>
+          </button>
+        </form>
+      </div>
+    </section>
+
+    <!-- ===================================================================
+         ABA 2: TURNOS & PAGAMENTOS
+         =================================================================== -->
+    <section id="view-turnos" class="tab-view hidden space-y-4 animate-fade-in">
+      <!-- Barra de Filtros -->
+      <div class="bg-white rounded-2xl p-3.5 sm:p-4 border border-slate-200 shadow-xs space-y-3">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <!-- Filtro por Colaboradora -->
+          <div class="flex-1">
+            <label for="filterCollaborator" class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">
+              Filtrar por Colaboradora
+            </label>
+            <select
+              id="filterCollaborator"
+              onchange="handleFilterChange()"
+              class="w-full rounded-xl border border-slate-300 bg-slate-50 px-3.5 py-2.5 text-sm font-bold text-[#0f172a] focus:border-[#059669] focus:bg-white outline-hidden"
+            >
+              <option value="ALL">Todas</option>
+            </select>
+          </div>
+
+          <!-- Filtro por Status (Inicia em "Em Aberto") -->
+          <div>
+            <span class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">
+              Status do Pagamento
+            </span>
+            <div class="flex items-center gap-1 bg-slate-100 p-1 rounded-xl">
+              <button
+                type="button"
+                data-status-filter="Em Aberto"
+                onclick="setStatusFilter('Em Aberto')"
+                class="status-filter-btn px-3 py-2 rounded-lg text-xs font-extrabold bg-white text-[#d97706] shadow-xs transition cursor-pointer"
+              >
+                Em Aberto
+              </button>
+              <button
+                type="button"
+                data-status-filter="Finalizado"
+                onclick="setStatusFilter('Finalizado')"
+                class="status-filter-btn px-3 py-2 rounded-lg text-xs font-semibold text-slate-600 hover:text-[#0f172a] transition cursor-pointer"
+              >
+                Finalizado
+              </button>
+              <button
+                type="button"
+                data-status-filter="ALL"
+                onclick="setStatusFilter('ALL')"
+                class="status-filter-btn px-3 py-2 rounded-lg text-xs font-semibold text-slate-600 hover:text-[#0f172a] transition cursor-pointer"
+              >
+                Todos
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Botão Selecionar Todos em Aberto (Filtrados) + Contador -->
+        <div class="flex flex-wrap items-center justify-between gap-2 pt-2.5 border-t border-slate-100">
+          <button
+            type="button"
+            onclick="toggleSelectAllFilteredOpen()"
+            class="inline-flex items-center gap-1.5 font-extrabold text-xs text-[#059669] hover:text-emerald-800 py-2 px-3 rounded-xl bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 transition cursor-pointer"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.3" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span id="selectAllOpenLabel">Selecionar Todos em Aberto (Filtrados)</span>
+          </button>
+
+          <span id="filteredSummaryText" class="text-xs font-semibold text-slate-600">
+            0 registros exibidos
+          </span>
+        </div>
+      </div>
+
+      <!-- Lista de Cartões de Plantões -->
+      <div id="shiftsListContainer" class="space-y-3">
+        <!-- Renderizado dinamicamente -->
+      </div>
+    </section>
+
+    <!-- ===================================================================
+         ABA 3: RESUMO FINANCEIRO
+         =================================================================== -->
+    <section id="view-financeiro" class="tab-view hidden space-y-5 animate-fade-in">
+      <!-- 3 Cards de Indicadores no Topo -->
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div class="bg-white rounded-2xl p-4 border-l-4 border-[#d97706] border-y border-r border-slate-200 shadow-xs">
+          <span class="block text-xs font-bold uppercase tracking-wider text-slate-500">Total em Aberto (R$)</span>
+          <span id="finCardOpenTotal" class="block text-2xl font-extrabold text-[#d97706] mt-1">R$ 0,00</span>
+        </div>
+
+        <div class="bg-white rounded-2xl p-4 border-l-4 border-[#059669] border-y border-r border-slate-200 shadow-xs">
+          <span class="block text-xs font-bold uppercase tracking-wider text-slate-500">Total Pago (R$)</span>
+          <span id="finCardPaidTotal" class="block text-2xl font-extrabold text-[#059669] mt-1">R$ 0,00</span>
+        </div>
+
+        <div class="bg-white rounded-2xl p-4 border-l-4 border-[#0f172a] border-y border-r border-slate-200 shadow-xs">
+          <span class="block text-xs font-bold uppercase tracking-wider text-slate-500">Total de Plantões Registrados</span>
+          <span id="finCardTotalCount" class="block text-2xl font-extrabold text-[#0f172a] mt-1">0</span>
+        </div>
+      </div>
+
+      <!-- Tabela Consolidada por Colaboradora -->
+      <div class="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
+        <div class="p-4 sm:p-5 border-b border-slate-100">
+          <h2 class="text-base sm:text-lg font-extrabold text-[#0f172a]">Consolidado por Colaboradora</h2>
+          <p class="text-xs text-slate-500 mt-0.5">Visão geral de plantões pendentes e valores já quitados</p>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="bg-slate-50 text-[11px] uppercase tracking-wider text-slate-600 border-b border-slate-200">
+                <th class="py-3 px-4 font-bold">Colaboradora</th>
+                <th class="py-3 px-3 font-bold text-center">Qtd. Aberto</th>
+                <th class="py-3 px-3 font-bold text-right text-[#d97706]">Valor Aberto</th>
+                <th class="py-3 px-3 font-bold text-center">Qtd. Pago</th>
+                <th class="py-3 px-4 font-bold text-right text-[#059669]">Valor Pago</th>
+              </tr>
+            </thead>
+            <tbody id="summaryByCollaboratorBody" class="divide-y divide-slate-100 text-sm">
+              <!-- Preenchido via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Histórico de Fechamentos Pagos (Espelhando a aba Financeiro) -->
+      <div class="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
+        <div class="p-4 sm:p-5 border-b border-slate-100">
+          <h2 class="text-base sm:text-lg font-extrabold text-[#0f172a]">Histórico de Fechamentos Pagos</h2>
+          <p class="text-xs text-slate-500 mt-0.5">Agrupado por Data de Pagamento e Colaboradora (espelho da aba <code class="bg-slate-100 px-1 rounded">Financeiro</code>)</p>
+        </div>
+
+        <div id="summaryByPaymentDateList" class="divide-y divide-slate-100">
+          <!-- Preenchido via JS -->
+        </div>
+      </div>
+
+      <!-- Exportação CSV (Registros_BK) -->
+      <div class="bg-white rounded-2xl border border-slate-200 shadow-xs p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div>
+          <h3 class="text-sm font-extrabold text-[#0f172a]">Exportar Backup CSV (Registros_BK)</h3>
+          <p class="text-xs text-slate-500 mt-0.5">
+            Gera arquivo UTF-8 com as 11 colunas oficiais da aba <code class="bg-slate-100 px-1 rounded">Registros_BK</code>.
+          </p>
+        </div>
+
+        <button
+          type="button"
+          onclick="exportCSV()"
+          class="py-3 px-5 rounded-xl bg-[#0f172a] hover:bg-slate-800 active:scale-[0.99] text-white font-bold text-xs sm:text-sm inline-flex items-center justify-center gap-2 shadow-xs transition cursor-pointer shrink-0"
+        >
+          <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+          </svg>
+          <span>Exportar CSV (Registros_BK)</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- ===================================================================
+         ABA 4: CONFIGURAÇÃO & SCRIPT
+         =================================================================== -->
+    <section id="view-config" class="tab-view hidden space-y-5 animate-fade-in">
+      <!-- Aviso de Segurança para Teste em Cópia -->
+      <div class="rounded-2xl bg-amber-50 border-2 border-amber-300 p-4 sm:p-5 flex items-start gap-3">
+        <svg class="w-6 h-6 text-[#d97706] shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+        </svg>
+        <div class="space-y-1">
+          <h3 class="text-sm font-extrabold text-amber-950">Recomendação de Segurança Antes de Conectar</h3>
+          <p class="text-xs sm:text-sm text-amber-900 leading-relaxed">
+            Faça primeiro uma cópia da sua planilha no Google Drive com o nome <strong>"Cópia de DB_Gestao_Colaborador_Pro_app"</strong> e realize seus testes nela. Quando confirmar que todos os lançamentos e baixas estão funcionando como esperado, cole aqui a URL da planilha oficial.
+          </p>
+        </div>
+      </div>
+
+      <!-- Card 1: Conexão com Google Apps Script -->
+      <div class="bg-white rounded-2xl border border-slate-200 shadow-xs p-4 sm:p-6 space-y-4">
+        <div>
+          <h2 class="text-base sm:text-lg font-extrabold text-[#0f172a]">Conexão com Google Apps Script</h2>
+          <p class="text-xs text-slate-500 mt-0.5">
+            Cole abaixo a URL do App da Web gerada na sua planilha (terminada em <code class="bg-slate-100 px-1 rounded">/exec</code>).
+          </p>
+        </div>
+
+        <div class="space-y-3">
+          <div>
+            <label for="scriptUrlInput" class="block text-xs font-bold text-slate-700 mb-1.5">
+              URL do App da Web (Google Apps Script)
+            </label>
+            <input
+              type="url"
+              id="scriptUrlInput"
+              placeholder="https://script.google.com/macros/s/AKfycb.../exec"
+              class="w-full rounded-xl border border-slate-300 bg-slate-50 focus:bg-white px-3.5 py-3 text-xs sm:text-sm font-mono text-[#0f172a] focus:border-[#059669] focus:ring-2 focus:ring-emerald-500/20 outline-hidden"
+            />
+          </div>
+
+          <div class="flex flex-col sm:flex-row gap-2.5">
+            <button
+              type="button"
+              id="btnTestConnection"
+              onclick="saveAndTestConnection()"
+              class="flex-1 py-3.5 px-5 rounded-xl bg-[#059669] hover:bg-emerald-700 active:scale-[0.99] text-white font-extrabold text-xs sm:text-sm inline-flex items-center justify-center gap-2 shadow-sm transition cursor-pointer"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.3" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+              <span>Salvar e Testar Conexão</span>
+            </button>
+
+            <button
+              type="button"
+              onclick="disconnectScript()"
+              class="py-3.5 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 active:scale-[0.99] text-slate-700 font-bold text-xs sm:text-sm inline-flex items-center justify-center gap-2 transition cursor-pointer"
+            >
+              <span>Desconectar (Voltar ao Modo Simulação)</span>
+            </button>
+          </div>
+
+          <!-- Feedback Visual Detalhado da Conexão -->
+          <div id="connectionFeedbackBox" class="hidden rounded-xl p-3.5 text-xs sm:text-sm font-semibold"></div>
+        </div>
+      </div>
+
+      <!-- Card 2: Guia Rápido em 4 Passos + Código Completo Code.gs -->
+      <div class="bg-white rounded-2xl border border-slate-200 shadow-xs p-4 sm:p-6 space-y-5">
+        <div>
+          <h2 class="text-base sm:text-lg font-extrabold text-[#0f172a]">Como Configurar na Planilha (4 Passos)</h2>
+          <p class="text-xs text-slate-500 mt-0.5">
+            O código abaixo já está alinhado às abas <code class="bg-slate-100 px-1 rounded">COLABORADOR</code>, <code class="bg-slate-100 px-1 rounded">Registros_BK</code> e <code class="bg-slate-100 px-1 rounded">Financeiro</code>.
+          </p>
+        </div>
+
+        <ol class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs text-slate-700">
+          <li class="p-3.5 rounded-xl bg-slate-50 border border-slate-200 flex items-start gap-2.5">
+            <span class="w-6 h-6 rounded-full bg-[#0f172a] text-white font-extrabold flex items-center justify-center shrink-0">1</span>
+            <span>Abra sua cópia de teste da planilha e acesse no menu superior: <strong>Extensões &gt; Apps Script</strong>.</span>
+          </li>
+          <li class="p-3.5 rounded-xl bg-slate-50 border border-slate-200 flex items-start gap-2.5">
+            <span class="w-6 h-6 rounded-full bg-[#0f172a] text-white font-extrabold flex items-center justify-center shrink-0">2</span>
+            <span>Apague todo o conteúdo inicial de <code class="bg-white px-1 rounded border">Code.gs</code>, cole o código abaixo e clique em <strong>Salvar</strong> (disquete).</span>
+          </li>
+          <li class="p-3.5 rounded-xl bg-slate-50 border border-slate-200 flex items-start gap-2.5">
+            <span class="w-6 h-6 rounded-full bg-[#0f172a] text-white font-extrabold flex items-center justify-center shrink-0">3</span>
+            <span>Clique em <strong>Implantar &gt; Nova implantação</strong>, escolha o tipo <strong>App da Web</strong>, marque <strong>Executar como: Eu</strong> e <strong>Quem pode acessar: Qualquer pessoa</strong>.</span>
+          </li>
+          <li class="p-3.5 rounded-xl bg-slate-50 border border-slate-200 flex items-start gap-2.5">
+            <span class="w-6 h-6 rounded-full bg-[#059669] text-white font-extrabold flex items-center justify-center shrink-0">4</span>
+            <span>Autorize o acesso da sua conta Google, copie a <strong>URL do app da Web (/exec)</strong> e cole no campo acima para testar.</span>
+          </li>
+        </ol>
+
+        <!-- Cabeçalho do Bloco de Código + Botão Copiar -->
+        <div class="space-y-2">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <span class="text-xs font-extrabold uppercase tracking-wider text-slate-600">
+              Código Completo: <code class="text-[#0f172a]">Code.gs</code>
+            </span>
+            <button
+              type="button"
+              id="btnCopyCode"
+              onclick="copyAppsScriptCode()"
+              class="py-2.5 px-4 rounded-xl bg-[#0f172a] hover:bg-slate-800 active:scale-95 text-white font-bold text-xs inline-flex items-center gap-2 shadow-xs transition cursor-pointer"
+            >
+              <svg id="copyCodeIcon" class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+              </svg>
+              <span id="copyCodeLabel">Copiar Código Code.gs</span>
+            </button>
+          </div>
+
+          <pre class="rounded-2xl bg-[#0f172a] text-slate-100 p-4 text-[11px] sm:text-xs font-mono overflow-x-auto max-h-96 leading-relaxed border border-slate-800"><code id="appsScriptCodeBlock"></code></pre>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- =====================================================================
+       BARRA FLUTUANTE INFERIOR PARA BAIXA DE PAGAMENTO EM LOTE
+       ===================================================================== -->
+  <div
+    id="batchActionBar"
+    class="hidden fixed bottom-0 inset-x-0 z-40 bg-[#0f172a]/95 backdrop-blur-md text-white border-t border-slate-700 shadow-2xl px-3.5 sm:px-5 py-3.5 animate-slide-up"
+  >
+    <div class="max-w-5xl mx-auto flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <div class="flex items-center justify-between sm:justify-start gap-4">
+        <div>
+          <span id="batchCountText" class="block text-xs text-slate-300 font-semibold">0 plantões selecionados</span>
+          <span id="batchTotalText" class="block text-xl font-extrabold text-emerald-400">R$ 0,00</span>
+        </div>
+        <button
+          type="button"
+          onclick="clearSelection()"
+          class="text-xs font-semibold text-slate-400 hover:text-white underline px-2 py-1 cursor-pointer"
+        >
+          Limpar
+        </button>
+      </div>
+
+      <div class="flex items-center gap-2.5">
+        <div class="flex-1 sm:flex-initial">
+          <label for="batchPaymentDate" class="block text-[10px] font-semibold text-slate-400 mb-0.5">Data de Pagamento</label>
+          <input
+            type="date"
+            id="batchPaymentDate"
+            class="w-full rounded-xl bg-slate-800 border border-slate-600 px-3 py-2 text-xs sm:text-sm font-semibold text-white focus:border-emerald-400 outline-hidden"
+          />
+        </div>
+        <button
+          type="button"
+          id="btnConfirmBatch"
+          onclick="settleBatchPayments()"
+          class="py-3 px-4 sm:px-5 rounded-xl bg-[#059669] hover:bg-emerald-600 active:scale-95 disabled:opacity-50 text-white font-extrabold text-xs sm:text-sm whitespace-nowrap shadow-md inline-flex items-center gap-1.5 transition cursor-pointer mt-3.5 sm:mt-4"
+        >
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+          </svg>
+          <span>Confirmar Pagamento (Dar Baixa)</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- =====================================================================
+       NOTIFICAÇÕES TOAST FLUTUANTES
+       ===================================================================== -->
+  <div
+    id="toastContainer"
+    class="fixed top-20 right-3.5 left-3.5 sm:left-auto sm:w-96 z-50 pointer-events-none flex flex-col gap-2"
+  ></div>
+
+  <!-- =====================================================================
+       LÓGICA JAVASCRIPT AUTOCONTIDA
+       ===================================================================== -->
+  <script>
+    const STORAGE_KEY_RECORDS = 'colaborador_pro_sim_records_v3';
+    const STORAGE_KEY_SCRIPT_URL = 'colaborador_pro_apps_script_url_v1';
+    const HOURLY_RATE = 10.00;
+
+    // Fallback padrão de colaboradoras quando no Modo Simulação Local
+    const DEFAULT_COLLABORATORS = [
+      'Laine', 'Claudia', 'Vanete',
+      'Katia', 'Claudio', 'Noemi',
+      'Josi', 'Josue', 'Levi'
+    ];
+
+    // Código completo do Google Apps Script (Code.gs) pronto para cópia
+    const APPS_SCRIPT_CODE = `// =========================================================================
+// COLABORADOR PRO — PONTE GOOGLE APPS SCRIPT (Code.gs)
+// Alinhado às abas: COLABORADOR, Registros_BK e Financeiro
+// =========================================================================
+
+const ABA_COLABORADOR = "COLABORADOR";
+const ABA_REGISTROS = "Registros_BK";
+const ABA_FINANCEIRO = "Financeiro";
+const VALOR_HORA = 10;
+
+// Leitura de dados: carrega colaboradoras e histórico de turnos para o App
+function doGet(e) {
+  try {
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const tz = ss.getSpreadsheetTimeZone();
+
+    // 1. Ler colaboradoras da aba COLABORADOR (Colunas: ID, Nome, Senha_Simples)
+    const sheetColab = ss.getSheetByName(ABA_COLABORADOR);
+    const colaboradoras = [];
+    if (sheetColab) {
+      const dadosColab = sheetColab.getDataRange().getValues();
+      for (let i = 1; i < dadosColab.length; i++) {
+        const nome = String(dadosColab[i][1] || "").trim();
+        if (nome) colaboradoras.push(nome);
+      }
+    }
+
+    // 2. Ler lançamentos da aba Registros_BK (11 colunas: A até K)
+    const sheetReg = ss.getSheetByName(ABA_REGISTROS);
+    if (!sheetReg) {
+      return responderJSON({ sucesso: false, erro: "Aba '" + ABA_REGISTROS + "' não encontrada na planilha." });
+    }
+
+    const dadosReg = sheetReg.getDataRange().getValues();
+    const registros = [];
+
+    for (let i = 1; i < dadosReg.length; i++) {
+      const linha = dadosReg[i];
+      const nome = String(linha[1] || "").trim();
+      if (!nome) continue; // Ignora linhas vazias
+
+      const idReg = formatarId(linha[0], tz, i);
+      const dataEntrada = formatarDataISO(linha[2], tz);
+      const horaEntrada = formatarHora(linha[3], tz);
+      const dataSaida = formatarDataISO(linha[4], tz);
+      const horaSaida = formatarHora(linha[5], tz);
+      const valorPlantao = Number(linha[7]) || 0;
+      const horas = valorPlantao > 0 ? Number((valorPlantao / VALOR_HORA).toFixed(4)) : 0;
+      const dataPagamento = formatarDataISO(linha[8], tz);
+      const statusRaw = String(linha[9] || "").trim();
+      const notas = String(linha[10] || "").trim();
+
+      registros.push({
+        linhaPlanilha: i + 1, // Número real da linha (base 1) para dar baixa
+        ID: idReg,
+        Nome_Colaborador: nome,
+        Data_Entrada: dataEntrada,
+        Hora_Entrada: horaEntrada,
+        Data_Saida: dataSaida,
+        Hora_Saida: horaSaida,
+        Duracao: horas,
+        Valor_Plantao: valorPlantao,
+        Data_Pagamento: dataPagamento,
+        Status: statusRaw.toLowerCase().indexOf("finalizado") !== -1 ? "Finalizado" : "Em Aberto",
+        Notas_Intercorrencias: notas
+      });
+    }
+
+    return responderJSON({
+      sucesso: true,
+      colaboradoras: colaboradoras,
+      registros: registros.reverse()
+    });
+  } catch (erro) {
+    return responderJSON({ sucesso: false, erro: erro.toString() });
+  }
+}
+
+// Escrita de dados: registra novo turno ou dá baixa em pagamentos
+function doPost(e) {
+  const lock = LockService.getScriptLock();
+  lock.waitLock(15000);
+
+  try {
+    const payload = JSON.parse(e.postData.contents);
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const sheetReg = ss.getSheetByName(ABA_REGISTROS);
+
+    if (!sheetReg) {
+      return responderJSON({ sucesso: false, erro: "Aba '" + ABA_REGISTROS + "' não encontrada." });
+    }
+
+    // AÇÃO 1: Inserir novo turno direto na aba Registros_BK (11 colunas)
+    if (payload.action === "novo_turno") {
+      const r = sheetReg.getLastRow() + 1;
+      const agora = new Date();
+
+      sheetReg.getRange(r, 1, 1, 11).setValues([[
+        agora,                                          // A: ID (Carimbo de data/hora)
+        payload.nome,                                   // B: Nome_Colaborador
+        payload.dataEntrada,                            // C: Data_Entrada
+        payload.horaEntrada,                            // D: Hora_Entrada
+        payload.dataSaida,                              // E: Data_Saida
+        payload.horaSaida,                              // F: Hora_Saida
+        "=(E" + r + "+F" + r + ")-(C" + r + "+D" + r + ")", // G: Duracao (Fórmula oficial)
+        "=(G" + r + "*24)*" + VALOR_HORA,               // H: Valor_Plantao (Fórmula oficial)
+        "",                                             // I: Data_Pagamento
+        "",                                             // J: Status
+        payload.notas || ""                             // K: Notas_Intercorrencias
+      ]]);
+
+      // Formatação visual idêntica à planilha
+      sheetReg.getRange(r, 1).setNumberFormat("dd/MM/yyyy HH:mm:ss");
+      sheetReg.getRange(r, 3).setNumberFormat("dd/MM/yyyy");
+      sheetReg.getRange(r, 4).setNumberFormat("HH:mm");
+      sheetReg.getRange(r, 5).setNumberFormat("dd/MM/yyyy");
+      sheetReg.getRange(r, 6).setNumberFormat("HH:mm");
+      sheetReg.getRange(r, 7).setNumberFormat("[hh]:mm:ss");
+      sheetReg.getRange(r, 8).setNumberFormat("R$ #,##0.00");
+
+      SpreadsheetApp.flush();
+      return responderJSON({ sucesso: true, mensagem: "Plantão registrado na linha " + r });
+    }
+
+    // AÇÃO 2: Dar baixa em plantões selecionados e lançar resumo na aba Financeiro
+    if (payload.action === "baixar_pagamento") {
+      const linhas = payload.linhas || [];
+      const dataPagamento = payload.dataPagamento;
+      const itens = payload.itens || [];
+
+      if (linhas.length === 0) {
+        return responderJSON({ sucesso: false, erro: "Nenhuma linha informada para baixa." });
+      }
+
+      // Atualiza Data_Pagamento (Col I) e Status (Col J) na Registros_BK
+      linhas.forEach(function(numLinha) {
+        const cellData = sheetReg.getRange(numLinha, 9);
+        cellData.setValue(dataPagamento);
+        cellData.setNumberFormat("dd/MM/yyyy");
+        sheetReg.getRange(numLinha, 10).setValue("Finalizado");
+      });
+
+      // Agrupa colaboradoras envolvidas nesta baixa para inserir na aba Financeiro
+      const sheetFin = ss.getSheetByName(ABA_FINANCEIRO);
+      if (sheetFin) {
+        const nomesUnicos = {};
+        itens.forEach(function(item) {
+          if (item.nome) nomesUnicos[item.nome] = true;
+        });
+
+        Object.keys(nomesUnicos).forEach(function(nomeColab) {
+          const rf = sheetFin.getLastRow() + 1;
+          sheetFin.getRange(rf, 1, 1, 4).setValues([[
+            dataPagamento,
+            nomeColab,
+            "=SUMIFS(" + ABA_REGISTROS + "!H:H, " + ABA_REGISTROS + "!I:I, A" + rf + ", " + ABA_REGISTROS + "!B:B, B" + rf + ")",
+            "PG"
+          ]]);
+          sheetFin.getRange(rf, 1).setNumberFormat("dd/MM/yyyy");
+          sheetFin.getRange(rf, 3).setNumberFormat("R$ #,##0.00");
+        });
+      }
+
+      SpreadsheetApp.flush();
+      return responderJSON({ sucesso: true, mensagem: linhas.length + " plantão(ões) finalizado(s)!" });
+    }
+
+    return responderJSON({ sucesso: false, erro: "Ação desconhecida." });
+  } catch (erro) {
+    return responderJSON({ sucesso: false, erro: erro.toString() });
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+function formatarId(valor, tz, indice) {
+  if (!valor) return "REG-" + indice;
+  if (valor instanceof Date) return Utilities.formatDate(valor, tz, "dd/MM/yyyy HH:mm");
+  return String(valor).trim();
+}
+
+function formatarDataISO(valor, tz) {
+  if (!valor) return "";
+  if (valor instanceof Date) return Utilities.formatDate(valor, tz, "yyyy-MM-dd");
+  const str = String(valor).trim();
+  if (/^\\d{2}\\/\\d{2}\\/\\d{4}$/.test(str)) {
+    const p = str.split("/");
+    return p[2] + "-" + p[1] + "-" + p[0];
+  }
+  return str.slice(0, 10);
+}
+
+function formatarHora(valor, tz) {
+  if (!valor) return "";
+  if (valor instanceof Date) return Utilities.formatDate(valor, tz, "HH:mm");
+  return String(valor).trim().slice(0, 5);
+}
+
+function responderJSON(objeto) {
+  return ContentService
+    .createTextOutput(JSON.stringify(objeto))
+    .setMimeType(ContentService.MimeType.JSON);
+}`;
+
+    // Estado Global da Aplicação
+    let state = {
+      scriptUrl: '',
+      isConnected: false,
+      collaborators: [...DEFAULT_COLLABORATORS],
+      records: [],
+      selectedCollaborator: 'Laine',
+      activePreset: 'noturno10',
+      statusFilter: 'Em Aberto', // Inicia mostrando plantões em aberto
+      selectedIds: new Set(),
+      isSyncing: false
+    };
+
+    /* =====================================================================
+       UTILITÁRIOS DE DATA, HORA E MOEDA
+       ===================================================================== */
+
+    function getTodayISO() {
+      const now = new Date();
+      const y = now.getFullYear();
+      const m = String(now.getMonth() + 1).padStart(2, '0');
+      const d = String(now.getDate()).padStart(2, '0');
+      return `${y}-${m}-${d}`;
+    }
+
+    function addDaysISO(dateISO, daysToAdd) {
+      if (!dateISO) return getTodayISO();
+      const [y, m, d] = dateISO.split('-').map(Number);
+      const dt = new Date(y, m - 1, d + daysToAdd);
+      const ny = dt.getFullYear();
+      const nm = String(dt.getMonth() + 1).padStart(2, '0');
+      const nd = String(dt.getDate()).padStart(2, '0');
+      return `${ny}-${nm}-${nd}`;
+    }
+
+    function formatDateBR(dateISO) {
+      if (!dateISO || !dateISO.includes('-')) return '—';
+      const [y, m, d] = dateISO.split('-');
+      return `${d}/${m}/${y}`;
+    }
+
+    function formatCurrency(value) {
+      const num = Number(value) || 0;
+      return num.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    }
+
+    function formatDurationHuman(decimalHours) {
+      const totalMinutes = Math.round((Number(decimalHours) || 0) * 60);
+      const h = Math.floor(totalMinutes / 60);
+      const m = totalMinutes % 60;
+      return `${h}h ${String(m).padStart(2, '0')}min`;
+    }
+
+    function formatDurationSheet(decimalHours) {
+      const totalMinutes = Math.round((Number(decimalHours) || 0) * 60);
+      const h = String(Math.floor(totalMinutes / 60)).padStart(2, '0');
+      const m = String(totalMinutes % 60).padStart(2, '0');
+      return `${h}:${m}:00`;
+    }
+
+    function computeDurationHours(dataEntrada, horaEntrada, dataSaida, horaSaida) {
+      if (!dataEntrada || !horaEntrada || !dataSaida || !horaSaida) return 0;
+      const [y1, m1, d1] = dataEntrada.split('-').map(Number);
+      const [h1, min1] = horaEntrada.split(':').map(Number);
+      const [y2, m2, d2] = dataSaida.split('-').map(Number);
+      const [h2, min2] = horaSaida.split(':').map(Number);
+
+      const start = new Date(y1, m1 - 1, d1, h1, min1);
+      const end = new Date(y2, m2 - 1, d2, h2, min2);
+      return (end.getTime() - start.getTime()) / (1000 * 60 * 60);
+    }
+
+    function sortRecordsDesc(list) {
+      return [...list].sort((a, b) => {
+        const keyA = `${a.Data_Entrada || ''}T${a.Hora_Entrada || ''}`;
+        const keyB = `${b.Data_Entrada || ''}T${b.Hora_Entrada || ''}`;
+        if (keyB !== keyA) return keyB.localeCompare(keyA);
+        return (b.linhaPlanilha || 0) - (a.linhaPlanilha || 0);
+      });
+    }
+
+    /* =====================================================================
+       DADOS DE EXEMPLO PARA O MODO SIMULAÇÃO LOCAL
+       ===================================================================== */
+
+    function buildSeedRecords() {
+      const seeds = [
+        {
+          uid: 'sim-10',
+          ID: 'REG-010',
+          Nome_Colaborador: 'Vanete',
+          Data_Entrada: '2026-11-23',
+          Hora_Entrada: '20:00',
+          Data_Saida: '2026-11-24',
+          Hora_Saida: '06:00',
+          Duracao: 10,
+          Valor_Plantao: 100.00,
+          Data_Pagamento: '',
+          Status: 'Em Aberto',
+          Notas_Intercorrencias: 'Plantão noturno tranquilo.'
+        },
+        {
+          uid: 'sim-09',
+          ID: 'REG-009',
+          Nome_Colaborador: 'Claudia',
+          Data_Entrada: '2026-11-22',
+          Hora_Entrada: '19:00',
+          Data_Saida: '2026-11-23',
+          Hora_Saida: '06:00',
+          Duracao: 11,
+          Valor_Plantao: 110.00,
+          Data_Pagamento: '',
+          Status: 'Em Aberto',
+          Notas_Intercorrencias: 'Medicação noturna administrada no horário.'
+        },
+        {
+          uid: 'sim-08',
+          ID: 'REG-008',
+          Nome_Colaborador: 'Vanete',
+          Data_Entrada: '2026-11-21',
+          Hora_Entrada: '20:00',
+          Data_Saida: '2026-11-22',
+          Hora_Saida: '06:00',
+          Duracao: 10,
+          Valor_Plantao: 100.00,
+          Data_Pagamento: '',
+          Status: 'Em Aberto',
+          Notas_Intercorrencias: ''
+        },
+        {
+          uid: 'sim-07',
+          ID: 'REG-007',
+          Nome_Colaborador: 'Laine',
+          Data_Entrada: '2026-11-20',
+          Hora_Entrada: '07:00',
+          Data_Saida: '2026-11-20',
+          Hora_Saida: '19:00',
+          Duracao: 12,
+          Valor_Plantao: 120.00,
+          Data_Pagamento: '',
+          Status: 'Em Aberto',
+          Notas_Intercorrencias: 'Plantão diurno completo.'
+        },
+        {
+          uid: 'sim-06',
+          ID: 'REG-006',
+          Nome_Colaborador: 'Katia',
+          Data_Entrada: '2026-11-18',
+          Hora_Entrada: '07:00',
+          Data_Saida: '2026-11-19',
+          Hora_Saida: '07:00',
+          Duracao: 24,
+          Valor_Plantao: 240.00,
+          Data_Pagamento: '',
+          Status: 'Em Aberto',
+          Notas_Intercorrencias: 'Plantão 24 horas.'
+        },
+        {
+          uid: 'sim-05',
+          ID: 'REG-005',
+          Nome_Colaborador: 'Claudia',
+          Data_Entrada: '2026-11-15',
+          Hora_Entrada: '18:00',
+          Data_Saida: '2026-11-16',
+          Hora_Saida: '06:00',
+          Duracao: 12,
+          Valor_Plantao: 120.00,
+          Data_Pagamento: '2026-11-16',
+          Status: 'Finalizado',
+          Notas_Intercorrencias: ''
+        },
+        {
+          uid: 'sim-04',
+          ID: 'REG-004',
+          Nome_Colaborador: 'Vanete',
+          Data_Entrada: '2026-11-14',
+          Hora_Entrada: '20:00',
+          Data_Saida: '2026-11-15',
+          Hora_Saida: '06:00',
+          Duracao: 10,
+          Valor_Plantao: 100.00,
+          Data_Pagamento: '2026-11-16',
+          Status: 'Finalizado',
+          Notas_Intercorrencias: ''
+        }
+      ];
+      return sortRecordsDesc(seeds);
+    }
+
+    function loadLocalSimulationData() {
+      state.collaborators = [...DEFAULT_COLLABORATORS];
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY_RECORDS);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            state.records = sortRecordsDesc(parsed);
+            return;
+          }
+        }
+      } catch (e) {
+        console.error('Erro ao ler simulação local:', e);
+      }
+      state.records = buildSeedRecords();
+      saveLocalSimulationData();
+    }
+
+    function saveLocalSimulationData() {
+      try {
+        localStorage.setItem(STORAGE_KEY_RECORDS, JSON.stringify(state.records));
+      } catch (e) {
+        console.error('Erro ao gravar simulação local:', e);
+      }
+    }
+
+    /* =====================================================================
+       CONEXÃO COM GOOGLE APPS SCRIPT (GET E POST)
+       ===================================================================== */
+
+    function updateConnectionHeaderUI() {
+      const badge = document.getElementById('connectionStatusBadge');
+      const dot = document.getElementById('connectionStatusDot');
+      const text = document.getElementById('connectionStatusText');
+
+      if (state.isConnected && state.scriptUrl) {
+        badge.className = 'inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-[11px] sm:text-xs font-bold bg-emerald-500/15 text-emerald-300 border border-emerald-500/40 hover:bg-emerald-500/25 transition cursor-pointer';
+        dot.className = 'w-2 h-2 rounded-full bg-emerald-400';
+        text.textContent = 'Planilha Conectada';
+      } else {
+        badge.className = 'inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-[11px] sm:text-xs font-bold bg-amber-500/15 text-amber-300 border border-amber-500/35 hover:bg-amber-500/25 transition cursor-pointer';
+        dot.className = 'w-2 h-2 rounded-full bg-amber-400 animate-pulse';
+        text.textContent = 'Modo Simulação Local';
+      }
+    }
+
+    function setSyncAnimation(active) {
+      state.isSyncing = active;
+      const icon = document.getElementById('syncIcon');
+      if (active) {
+        icon.classList.add('animate-spin');
+      } else {
+        icon.classList.remove('animate-spin');
+      }
+    }
+
+    async function fetchFromAppsScript(urlToTest, showSuccessToast = false) {
+      setSyncAnimation(true);
+      try {
+        // Adiciona timestamp para evitar cache agressivo do navegador
+        const separator = urlToTest.includes('?') ? '&' : '?';
+        const response = await fetch(`${urlToTest}${separator}t=${Date.now()}`, {
+          method: 'GET',
+          redirect: 'follow'
+        });
+
+        const rawText = await response.text();
+        let data;
+        try {
+          data = JSON.parse(rawText);
+        } catch (parseErr) {
+          throw new Error('O link respondeu com HTML em vez de JSON. Verifique se a implantação está publicada como "App da Web" e acessível por "Qualquer pessoa".');
+        }
+
+        if (!data.sucesso) {
+          throw new Error(data.erro || 'Erro retornado pelo Google Apps Script.');
+        }
+
+        // Atualiza colaboradoras dinâmicas da aba COLABORADOR
+        if (Array.isArray(data.colaboradoras) && data.colaboradoras.length > 0) {
+          state.collaborators = data.colaboradoras;
+        } else {
+          state.collaborators = [...DEFAULT_COLLABORATORS];
+        }
+
+        // Garante que a colaboradora selecionada exista na lista
+        if (!state.collaborators.includes(state.selectedCollaborator)) {
+          state.selectedCollaborator = state.collaborators[0];
+        }
+
+        // Mapeia registros reais da aba Registros_BK
+        const mappedRecords = (data.registros || []).map((r, idx) => {
+          const duration = Number(r.Duracao) || computeDurationHours(r.Data_Entrada, r.Hora_Entrada, r.Data_Saida, r.Hora_Saida);
+          return {
+            uid: `sheet-${r.linhaPlanilha || idx}`,
+            linhaPlanilha: r.linhaPlanilha,
+            ID: r.ID || `LINHA-${r.linhaPlanilha}`,
+            Nome_Colaborador: r.Nome_Colaborador,
+            Data_Entrada: r.Data_Entrada,
+            Hora_Entrada: r.Hora_Entrada,
+            Data_Saida: r.Data_Saida,
+            Hora_Saida: r.Hora_Saida,
+            Duracao: duration,
+            Valor_Plantao: Number(r.Valor_Plantao) || Number((duration * HOURLY_RATE).toFixed(2)),
+            Data_Pagamento: r.Data_Pagamento || '',
+            Status: r.Status === 'Finalizado' ? 'Finalizado' : 'Em Aberto',
+            Notas_Intercorrencias: r.Notas_Intercorrencias || ''
+          };
+        });
+
+        state.records = sortRecordsDesc(mappedRecords);
+        state.isConnected = true;
+        state.selectedIds.clear();
+
+        refreshAllViews();
+        if (showSuccessToast) {
+          showToast(`Sincronizado! ${state.collaborators.length} colaboradoras e ${state.records.length} registros carregados.`, 'success');
+        }
+        return data;
+      } finally {
+        setSyncAnimation(false);
+      }
+    }
+
+    async function postToAppsScript(payload) {
+      // Sem header 'application/json' para evitar preflight OPTIONS CORS no Google Apps Script
+      const response = await fetch(state.scriptUrl, {
+        method: 'POST',
+        redirect: 'follow',
+        body: JSON.stringify(payload)
+      });
+
+      const rawText = await response.text();
+      let data;
+      try {
+        data = JSON.parse(rawText);
+      } catch (err) {
+        throw new Error('Resposta inesperada do Apps Script ao gravar dados.');
+      }
+
+      if (!data.sucesso) {
+        throw new Error(data.erro || 'Não foi possível gravar na planilha.');
+      }
+      return data;
+    }
+
+    async function handleQuickSync() {
+      if (!state.scriptUrl) {
+        loadLocalSimulationData();
+        refreshAllViews();
+        showToast('Dados locais atualizados (Modo Simulação).', 'info');
+        return;
+      }
+
+      try {
+        await fetchFromAppsScript(state.scriptUrl, true);
+      } catch (err) {
+        showToast(err.message, 'error');
+      }
+    }
+
+    async function saveAndTestConnection() {
+      const input = document.getElementById('scriptUrlInput');
+      const feedback = document.getElementById('connectionFeedbackBox');
+      const btn = document.getElementById('btnTestConnection');
+      const rawUrl = input.value.trim();
+
+      if (!rawUrl || !rawUrl.startsWith('https://script.google.com/')) {
+        feedback.className = 'rounded-xl p-3.5 text-xs sm:text-sm font-semibold bg-rose-50 text-rose-800 border border-rose-200';
+        feedback.textContent = 'Cole uma URL válida do Google Apps Script iniciada por https://script.google.com/...';
+        feedback.classList.remove('hidden');
+        return;
+      }
+
+      btn.disabled = true;
+      feedback.className = 'rounded-xl p-3.5 text-xs sm:text-sm font-semibold bg-slate-100 text-slate-700 border border-slate-200';
+      feedback.textContent = 'Testando conexão e lendo abas COLABORADOR e Registros_BK...';
+      feedback.classList.remove('hidden');
+
+      try {
+        await fetchFromAppsScript(rawUrl, false);
+        state.scriptUrl = rawUrl;
+        localStorage.setItem(STORAGE_KEY_SCRIPT_URL, rawUrl);
+        updateConnectionHeaderUI();
+
+        const msg = `Conectado! ${state.collaborators.length} colaboradoras e ${state.records.length} registros carregados.`;
+        feedback.className = 'rounded-xl p-3.5 text-xs sm:text-sm font-bold bg-emerald-50 text-[#059669] border border-emerald-200';
+        feedback.textContent = msg;
+        showToast(msg, 'success');
+      } catch (err) {
+        state.isConnected = false;
+        updateConnectionHeaderUI();
+        feedback.className = 'rounded-xl p-3.5 text-xs sm:text-sm font-semibold bg-rose-50 text-rose-800 border border-rose-200';
+        feedback.textContent = `Falha na conexão: ${err.message}`;
+        showToast('Erro ao conectar com a planilha.', 'error');
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    function disconnectScript() {
+      localStorage.removeItem(STORAGE_KEY_SCRIPT_URL);
+      state.scriptUrl = '';
+      state.isConnected = false;
+      state.selectedIds.clear();
+
+      document.getElementById('scriptUrlInput').value = '';
+      const feedback = document.getElementById('connectionFeedbackBox');
+      feedback.className = 'rounded-xl p-3.5 text-xs sm:text-sm font-semibold bg-amber-50 text-amber-900 border border-amber-200';
+      feedback.textContent = 'Desconectado. O aplicativo voltou ao Modo Simulação Local com dados de exemplo.';
+      feedback.classList.remove('hidden');
+
+      loadLocalSimulationData();
+      refreshAllViews();
+      showToast('Modo Simulação Local restaurado.', 'info');
+    }
+
+    /* =====================================================================
+       NAVEGAÇÃO ENTRE ABAS
+       ===================================================================== */
+
+    function switchTab(tabName) {
+      document.querySelectorAll('.tab-view').forEach(el => el.classList.add('hidden'));
+      const target = document.getElementById(`view-${tabName}`);
+      if (target) target.classList.remove('hidden');
+
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('border-[#059669]', 'text-[#059669]', 'font-extrabold');
+        btn.classList.add('border-transparent', 'text-slate-500', 'font-semibold');
+      });
+
+      const activeBtn = document.getElementById(`tab-btn-${tabName}`);
+      if (activeBtn) {
+        activeBtn.classList.remove('border-transparent', 'text-slate-500', 'font-semibold');
+        activeBtn.classList.add('border-[#059669]', 'text-[#059669]', 'font-extrabold');
+      }
+
+      if (tabName === 'turnos') {
+        populateCollaboratorFilter();
+        renderShiftsList();
+      } else if (tabName === 'financeiro') {
+        renderFinancialSummary();
+      }
+    }
+
+    function refreshAllViews() {
+      updateConnectionHeaderUI();
+      updateOpenBadge();
+      renderCollaboratorButtons();
+      populateCollaboratorFilter();
+      renderShiftsList();
+      renderFinancialSummary();
+    }
+
+    /* =====================================================================
+       ABA 1: NOVO TURNO
+       ===================================================================== */
+
+    function renderCollaboratorButtons() {
+      const grid = document.getElementById('collaboratorGrid');
+      grid.innerHTML = '';
+
+      state.collaborators.forEach(name => {
+        const isSelected = state.selectedCollaborator === name;
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.onclick = () => {
+          state.selectedCollaborator = name;
+          renderCollaboratorButtons();
+        };
+
+        btn.className = isSelected
+          ? 'p-3.5 rounded-xl bg-[#0f172a] text-white font-extrabold text-sm shadow-sm ring-2 ring-[#059669] flex items-center justify-center gap-1.5 active:scale-95 transition cursor-pointer'
+          : 'p-3.5 rounded-xl bg-slate-50 hover:bg-emerald-50 text-[#0f172a] border border-slate-200 hover:border-[#059669] font-semibold text-sm flex items-center justify-center gap-1.5 active:scale-95 transition cursor-pointer';
+
+        btn.innerHTML = isSelected
+          ? `<svg class="w-4 h-4 text-emerald-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2.6" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg><span class="truncate">${escapeHTML(name)}</span>`
+          : `<span class="truncate">${escapeHTML(name)}</span>`;
+
+        grid.appendChild(btn);
+      });
+
+      document.getElementById('selectedPersonLabel').textContent = state.selectedCollaborator;
+    }
+
+    function highlightPresetButton(presetKey) {
+      state.activePreset = presetKey;
+      document.querySelectorAll('.preset-btn').forEach(btn => {
+        if (btn.dataset.preset === presetKey) {
+          btn.classList.remove('bg-white', 'border', 'border-slate-200');
+          btn.classList.add('bg-emerald-50', 'border-2', 'border-[#059669]', 'shadow-2xs');
+        } else {
+          btn.classList.remove('bg-emerald-50', 'border-2', 'border-[#059669]', 'shadow-2xs');
+          btn.classList.add('bg-white', 'border', 'border-slate-200');
+        }
+      });
+    }
+
+    function applyShiftPreset(presetKey, startTime, endTime, daysOffset) {
+      const today = getTodayISO();
+      document.getElementById('dataEntrada').value = today;
+      document.getElementById('horaEntrada').value = startTime;
+      document.getElementById('dataSaida').value = addDaysISO(today, daysOffset);
+      document.getElementById('horaSaida').value = endTime;
+
+      highlightPresetButton(presetKey);
+      recalculateShiftPreview();
+    }
+
+    function handleManualDateTimeChange() {
+      highlightPresetButton(null);
+      recalculateShiftPreview();
+    }
+
+    function recalculateShiftPreview() {
+      const dataEntrada = document.getElementById('dataEntrada').value;
+      const horaEntrada = document.getElementById('horaEntrada').value;
+      const dataSaida = document.getElementById('dataSaida').value;
+      const horaSaida = document.getElementById('horaSaida').value;
+
+      const hours = computeDurationHours(dataEntrada, horaEntrada, dataSaida, horaSaida);
+      const panel = document.getElementById('liveCalcPanel');
+      const validBox = document.getElementById('liveCalcValid');
+      const errorBox = document.getElementById('liveCalcError');
+      const saveBtn = document.getElementById('btnSaveShift');
+
+      if (hours <= 0 || isNaN(hours)) {
+        panel.className = 'rounded-2xl p-4 sm:p-5 bg-rose-50 border-2 border-rose-200 transition-colors';
+        validBox.classList.add('hidden');
+        errorBox.classList.remove('hidden');
+        saveBtn.disabled = true;
+      } else {
+        panel.className = 'rounded-2xl p-4 sm:p-5 bg-emerald-50 border-2 border-emerald-300 shadow-2xs transition-colors';
+        validBox.classList.remove('hidden');
+        errorBox.classList.add('hidden');
+        saveBtn.disabled = false;
+
+        const totalValue = Number((hours * HOURLY_RATE).toFixed(2));
+        document.getElementById('previewDuration').textContent = formatDurationHuman(hours);
+        document.getElementById('previewValue').textContent = formatCurrency(totalValue);
+      }
+    }
+
+    function setSaveButtonLoading(isLoading) {
+      const btn = document.getElementById('btnSaveShift');
+      const spinner = document.getElementById('btnSaveSpinner');
+      const check = document.getElementById('btnSaveCheck');
+      const label = document.getElementById('btnSaveLabel');
+
+      btn.disabled = isLoading;
+      if (isLoading) {
+        spinner.classList.remove('hidden');
+        check.classList.add('hidden');
+        label.textContent = 'Gravando na Planilha...';
+      } else {
+        spinner.classList.add('hidden');
+        check.classList.remove('hidden');
+        label.textContent = 'Registrar Plantão';
+      }
+    }
+
+    async function handleSaveShift(event) {
+      event.preventDefault();
+
+      const dataEntrada = document.getElementById('dataEntrada').value;
+      const horaEntrada = document.getElementById('horaEntrada').value;
+      const dataSaida = document.getElementById('dataSaida').value;
+      const horaSaida = document.getElementById('horaSaida').value;
+      const hours = computeDurationHours(dataEntrada, horaEntrada, dataSaida, horaSaida);
+
+      if (hours <= 0 || isNaN(hours)) {
+        showToast('Verifique as datas e horários de entrada e saída.', 'error');
+        return;
+      }
+
+      const notas = document.getElementById('notasInput').value.trim();
+
+      // Modo Conectado ao Google Apps Script
+      if (state.isConnected && state.scriptUrl) {
+        setSaveButtonLoading(true);
+        try {
+          await postToAppsScript({
+            action: 'novo_turno',
+            nome: state.selectedCollaborator,
+            dataEntrada,
+            horaEntrada,
+            dataSaida,
+            horaSaida,
+            notas
+          });
+
+          document.getElementById('notasInput').value = '';
+          await fetchFromAppsScript(state.scriptUrl, false);
+          showToast(`Plantão de ${state.selectedCollaborator} gravado na planilha!`, 'success');
+        } catch (err) {
+          showToast(`Erro ao gravar: ${err.message}`, 'error');
+        } finally {
+          setSaveButtonLoading(false);
+        }
+        return;
+      }
+
+      // Modo Simulação Local (localStorage)
+      const nextNum = state.records.length + 1;
+      const newRecord = {
+        uid: `sim-${Date.now()}`,
+        ID: `REG-${String(nextNum).padStart(3, '0')}`,
+        Nome_Colaborador: state.selectedCollaborator,
+        Data_Entrada: dataEntrada,
+        Hora_Entrada: horaEntrada,
+        Data_Saida: dataSaida,
+        Hora_Saida: horaSaida,
+        Duracao: Number(hours.toFixed(4)),
+        Valor_Plantao: Number((hours * HOURLY_RATE).toFixed(2)),
+        Data_Pagamento: '',
+        Status: 'Em Aberto',
+        Notas_Intercorrencias: notas
+      };
+
+      state.records = sortRecordsDesc([newRecord, ...state.records]);
+      saveLocalSimulationData();
+      document.getElementById('notasInput').value = '';
+      refreshAllViews();
+      showToast(`Plantão de ${state.selectedCollaborator} salvo (Modo Simulação)!`, 'success');
+    }
+
+    /* =====================================================================
+       ABA 2: TURNOS & PAGAMENTOS
+       ===================================================================== */
+
+    function populateCollaboratorFilter() {
+      const select = document.getElementById('filterCollaborator');
+      if (!select) return;
+      const previousVal = select.value || 'ALL';
+
+      const namesSet = new Set(state.collaborators);
+      state.records.forEach(r => {
+        if (r.Nome_Colaborador) namesSet.add(r.Nome_Colaborador);
+      });
+
+      const sortedNames = Array.from(namesSet).sort((a, b) => a.localeCompare(b, 'pt-BR'));
+      select.innerHTML = '<option value="ALL">Todas</option>';
+      sortedNames.forEach(name => {
+        const opt = document.createElement('option');
+        opt.value = name;
+        opt.textContent = name;
+        select.appendChild(opt);
+      });
+
+      select.value = namesSet.has(previousVal) ? previousVal : 'ALL';
+    }
+
+    function handleFilterChange() {
+      state.selectedIds.clear();
+      renderShiftsList();
+    }
+
+    function setStatusFilter(status) {
+      state.statusFilter = status;
+      state.selectedIds.clear();
+
+      document.querySelectorAll('.status-filter-btn').forEach(btn => {
+        const btnStatus = btn.dataset.statusFilter;
+        if (btnStatus === status) {
+          const activeColor = status === 'Em Aberto'
+            ? 'text-[#d97706]'
+            : status === 'Finalizado'
+              ? 'text-[#059669]'
+              : 'text-[#0f172a]';
+          btn.className = `status-filter-btn px-3 py-2 rounded-lg text-xs font-extrabold bg-white ${activeColor} shadow-xs transition cursor-pointer`;
+        } else {
+          btn.className = 'status-filter-btn px-3 py-2 rounded-lg text-xs font-semibold text-slate-600 hover:text-[#0f172a] transition cursor-pointer';
+        }
+      });
+
+      renderShiftsList();
+    }
+
+    function getFilteredRecords() {
+      const collabFilter = document.getElementById('filterCollaborator')?.value || 'ALL';
+      return state.records.filter(rec => {
+        const matchCollab = collabFilter === 'ALL' || rec.Nome_Colaborador === collabFilter;
+        const matchStatus = state.statusFilter === 'ALL' || rec.Status === state.statusFilter;
+        return matchCollab && matchStatus;
+      });
+    }
+
+    function renderShiftsList() {
+      const filtered = getFilteredRecords();
+      const openFiltered = filtered.filter(r => r.Status === 'Em Aberto');
+      const totalFilteredValue = filtered.reduce((acc, r) => acc + (Number(r.Valor_Plantao) || 0), 0);
+
+      document.getElementById('filteredSummaryText').textContent =
+        `${filtered.length} ${filtered.length === 1 ? 'registro' : 'registros'} • ${formatCurrency(totalFilteredValue)}`;
+
+      const allOpenSelected = openFiltered.length > 0 && openFiltered.every(r => state.selectedIds.has(r.uid));
+      document.getElementById('selectAllOpenLabel').textContent = allOpenSelected
+        ? 'Desmarcar Todos em Aberto'
+        : `Selecionar Todos em Aberto (${openFiltered.length})`;
+
+      const container = document.getElementById('shiftsListContainer');
+      container.innerHTML = '';
+
+      if (filtered.length === 0) {
+        container.innerHTML = `
+          <div class="bg-white rounded-2xl border border-slate-200 p-8 text-center space-y-1.5">
+            <p class="text-sm font-extrabold text-[#0f172a]">Nenhum plantão encontrado neste filtro.</p>
+            <p class="text-xs text-slate-500">Altere o filtro de status ou colaboradora acima.</p>
+          </div>
+        `;
+        updateBatchBar();
+        return;
+      }
+
+      filtered.forEach(rec => {
+        const isOpen = rec.Status === 'Em Aberto';
+        const isChecked = state.selectedIds.has(rec.uid);
+
+        const card = document.createElement('article');
+        card.className = `bg-white rounded-2xl border transition p-4 shadow-xs ${
+          isChecked
+            ? 'border-[#059669] ring-2 ring-emerald-500/20 bg-emerald-50/20'
+            : 'border-slate-200 hover:border-slate-300'
+        }`;
+
+        card.innerHTML = `
+          <div class="flex items-start gap-3">
+            <!-- Caixa de Seleção para itens Em Aberto -->
+            <div class="pt-0.5 shrink-0">
+              ${
+                isOpen
+                  ? `<input
+                      type="checkbox"
+                      aria-label="Selecionar plantão de ${escapeHTML(rec.Nome_Colaborador)}"
+                      ${isChecked ? 'checked' : ''}
+                      onchange="toggleRecordSelection('${rec.uid}')"
+                      class="w-5 h-5 rounded-md border-slate-300 text-[#059669] focus:ring-[#059669] cursor-pointer"
+                    />`
+                  : `<div class="w-5 h-5 rounded-md bg-emerald-100 text-[#059669] flex items-center justify-center" title="Pago">
+                      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.6" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                      </svg>
+                    </div>`
+              }
+            </div>
+
+            <!-- Conteúdo do Cartão -->
+            <div class="flex-1 min-w-0 space-y-2.5">
+              <div class="flex flex-wrap items-center justify-between gap-2">
+                <div class="flex items-center gap-2">
+                  <h3 class="text-base font-extrabold text-[#0f172a]">${escapeHTML(rec.Nome_Colaborador)}</h3>
+                  <span class="text-[11px] font-mono text-slate-400">
+                    ${rec.linhaPlanilha ? `Linha ${rec.linhaPlanilha}` : escapeHTML(rec.ID)}
+                  </span>
+                </div>
+
+                ${
+                  isOpen
+                    ? `<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-extrabold bg-amber-100 text-[#d97706] border border-amber-300">
+                        <span class="w-1.5 h-1.5 rounded-full bg-[#d97706]"></span>
+                        Em Aberto
+                      </span>`
+                    : `<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-extrabold bg-emerald-100 text-[#059669] border border-emerald-300">
+                        <span class="w-1.5 h-1.5 rounded-full bg-[#059669]"></span>
+                        Finalizado ${rec.Data_Pagamento ? `• Pago em ${formatDateBR(rec.Data_Pagamento)}` : ''}
+                      </span>`
+                }
+              </div>
+
+              <!-- Linha de Data/Hora, Duração e Valor -->
+              <div class="flex flex-wrap items-center justify-between gap-2 bg-slate-50 rounded-xl px-3 py-2.5 border border-slate-200/80 text-xs sm:text-sm">
+                <div class="text-slate-700 font-medium">
+                  <span class="font-bold text-[#0f172a]">${formatDateBR(rec.Data_Entrada)}</span> ${rec.Hora_Entrada}
+                  <span class="mx-1 text-slate-400">→</span>
+                  <span class="font-bold text-[#0f172a]">${formatDateBR(rec.Data_Saida)}</span> ${rec.Hora_Saida}
+                </div>
+
+                <div class="flex items-center gap-2.5 ml-auto">
+                  <span class="px-2 py-0.5 rounded-md bg-white border border-slate-200 text-xs font-bold text-slate-700">
+                    ${formatDurationHuman(rec.Duracao)}
+                  </span>
+                  <span class="text-base font-extrabold ${isOpen ? 'text-[#d97706]' : 'text-[#059669]'}">
+                    ${formatCurrency(rec.Valor_Plantao)}
+                  </span>
+                </div>
+              </div>
+
+              ${
+                rec.Notas_Intercorrencias
+                  ? `<p class="text-xs text-slate-600 bg-slate-50 border-l-2 border-slate-400 pl-2.5 py-1 rounded-r-lg">
+                      ${escapeHTML(rec.Notas_Intercorrencias)}
+                    </p>`
+                  : ''
+              }
+            </div>
+          </div>
+        `;
+
+        container.appendChild(card);
+      });
+
+      updateBatchBar();
+    }
+
+    function toggleRecordSelection(uid) {
+      if (state.selectedIds.has(uid)) {
+        state.selectedIds.delete(uid);
+      } else {
+        state.selectedIds.add(uid);
+      }
+      renderShiftsList();
+    }
+
+    function toggleSelectAllFilteredOpen() {
+      const openFiltered = getFilteredRecords().filter(r => r.Status === 'Em Aberto');
+      if (openFiltered.length === 0) {
+        showToast('Não há plantões em aberto neste filtro.', 'info');
+        return;
+      }
+
+      const allSelected = openFiltered.every(r => state.selectedIds.has(r.uid));
+      if (allSelected) {
+        openFiltered.forEach(r => state.selectedIds.delete(r.uid));
+      } else {
+        openFiltered.forEach(r => state.selectedIds.add(r.uid));
+      }
+      renderShiftsList();
+    }
+
+    function clearSelection() {
+      state.selectedIds.clear();
+      renderShiftsList();
+    }
+
+    function updateBatchBar() {
+      const bar = document.getElementById('batchActionBar');
+      const selectedOpen = state.records.filter(
+        r => state.selectedIds.has(r.uid) && r.Status === 'Em Aberto'
+      );
+
+      if (selectedOpen.length === 0) {
+        bar.classList.add('hidden');
+        return;
+      }
+
+      const totalSum = selectedOpen.reduce((acc, r) => acc + (Number(r.Valor_Plantao) || 0), 0);
+      document.getElementById('batchCountText').textContent =
+        `${selectedOpen.length} ${selectedOpen.length === 1 ? 'plantão selecionado' : 'plantões selecionados'}`;
+      document.getElementById('batchTotalText').textContent = formatCurrency(totalSum);
+
+      const dateInput = document.getElementById('batchPaymentDate');
+      if (!dateInput.value) dateInput.value = getTodayISO();
+
+      bar.classList.remove('hidden');
+    }
+
+    async function settleBatchPayments() {
+      const selectedOpen = state.records.filter(
+        r => state.selectedIds.has(r.uid) && r.Status === 'Em Aberto'
+      );
+      if (selectedOpen.length === 0) return;
+
+      const payDate = document.getElementById('batchPaymentDate').value || getTodayISO();
+      const totalPaid = selectedOpen.reduce((acc, r) => acc + (Number(r.Valor_Plantao) || 0), 0);
+
+      // Modo Conectado ao Google Apps Script
+      if (state.isConnected && state.scriptUrl) {
+        const btn = document.getElementById('btnConfirmBatch');
+        btn.disabled = true;
+        try {
+          const linhas = selectedOpen
+            .map(r => r.linhaPlanilha)
+            .filter(n => typeof n === 'number' && n > 1);
+
+          const itens = selectedOpen.map(r => ({
+            linhaPlanilha: r.linhaPlanilha,
+            nome: r.Nome_Colaborador,
+            valor: Number(r.Valor_Plantao) || 0
+          }));
+
+          await postToAppsScript({
+            action: 'baixar_pagamento',
+            linhas,
+            dataPagamento: payDate,
+            itens
+          });
+
+          state.selectedIds.clear();
+          await fetchFromAppsScript(state.scriptUrl, false);
+          showToast(`${selectedOpen.length} plantão(ões) pago(s) (${formatCurrency(totalPaid)}) gravado(s) na planilha!`, 'success');
+        } catch (err) {
+          showToast(`Erro ao dar baixa: ${err.message}`, 'error');
+        } finally {
+          btn.disabled = false;
+        }
+        return;
+      }
+
+      // Modo Simulação Local
+      state.records = state.records.map(rec => {
+        if (state.selectedIds.has(rec.uid) && rec.Status === 'Em Aberto') {
+          return {
+            ...rec,
+            Status: 'Finalizado',
+            Data_Pagamento: payDate
+          };
+        }
+        return rec;
+      });
+
+      state.selectedIds.clear();
+      saveLocalSimulationData();
+      refreshAllViews();
+      showToast(`${selectedOpen.length} plantão(ões) baixado(s) (${formatCurrency(totalPaid)})!`, 'success');
+    }
+
+    /* =====================================================================
+       ABA 3: RESUMO FINANCEIRO & EXPORTAÇÃO CSV
+       ===================================================================== */
+
+    function renderFinancialSummary() {
+      let totalOpenValue = 0;
+      let totalPaidValue = 0;
+      const byCollab = {};
+
+      state.records.forEach(r => {
+        const name = r.Nome_Colaborador || 'Não Informado';
+        const val = Number(r.Valor_Plantao) || 0;
+
+        if (!byCollab[name]) {
+          byCollab[name] = {
+            name,
+            openCount: 0,
+            openValue: 0,
+            paidCount: 0,
+            paidValue: 0
+          };
+        }
+
+        if (r.Status === 'Em Aberto') {
+          totalOpenValue += val;
+          byCollab[name].openCount++;
+          byCollab[name].openValue += val;
+        } else {
+          totalPaidValue += val;
+          byCollab[name].paidCount++;
+          byCollab[name].paidValue += val;
+        }
+      });
+
+      document.getElementById('finCardOpenTotal').textContent = formatCurrency(totalOpenValue);
+      document.getElementById('finCardPaidTotal').textContent = formatCurrency(totalPaidValue);
+      document.getElementById('finCardTotalCount').textContent = String(state.records.length);
+
+      // Tabela Consolidada por Colaboradora
+      const list = Object.values(byCollab).sort((a, b) => b.openValue - a.openValue || b.paidValue - a.paidValue);
+      const tbody = document.getElementById('summaryByCollaboratorBody');
+      tbody.innerHTML = '';
+
+      let sumOpenCount = 0;
+      let sumPaidCount = 0;
+
+      list.forEach(item => {
+        sumOpenCount += item.openCount;
+        sumPaidCount += item.paidCount;
+
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-slate-50 transition';
+        tr.innerHTML = `
+          <td class="py-3 px-4 font-extrabold text-[#0f172a]">${escapeHTML(item.name)}</td>
+          <td class="py-3 px-3 text-center font-semibold text-slate-700">${item.openCount}</td>
+          <td class="py-3 px-3 text-right font-extrabold ${item.openValue > 0 ? 'text-[#d97706]' : 'text-slate-400'}">
+            ${formatCurrency(item.openValue)}
+          </td>
+          <td class="py-3 px-3 text-center font-semibold text-slate-700">${item.paidCount}</td>
+          <td class="py-3 px-4 text-right font-extrabold text-[#059669]">
+            ${formatCurrency(item.paidValue)}
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      if (list.length > 0) {
+        const totalTr = document.createElement('tr');
+        totalTr.className = 'bg-slate-100/90 font-extrabold text-[#0f172a] border-t-2 border-slate-300';
+        totalTr.innerHTML = `
+          <td class="py-3 px-4">TOTAL GERAL</td>
+          <td class="py-3 px-3 text-center">${sumOpenCount}</td>
+          <td class="py-3 px-3 text-right text-[#d97706]">${formatCurrency(totalOpenValue)}</td>
+          <td class="py-3 px-3 text-center">${sumPaidCount}</td>
+          <td class="py-3 px-4 text-right text-[#059669]">${formatCurrency(totalPaidValue)}</td>
+        `;
+        tbody.appendChild(totalTr);
+      }
+
+      // Histórico de Fechamentos Pagos agrupado por Data de Pagamento e Colaboradora
+      const groups = {};
+      state.records
+        .filter(r => r.Status === 'Finalizado')
+        .forEach(r => {
+          const dt = r.Data_Pagamento || 'Sem data';
+          const key = `${dt}__${r.Nome_Colaborador}`;
+          if (!groups[key]) {
+            groups[key] = {
+              date: dt,
+              name: r.Nome_Colaborador,
+              count: 0,
+              total: 0
+            };
+          }
+          groups[key].count++;
+          groups[key].total += Number(r.Valor_Plantao) || 0;
+        });
+
+      const groupList = Object.values(groups).sort((a, b) => b.date.localeCompare(a.date));
+      const historyContainer = document.getElementById('summaryByPaymentDateList');
+      historyContainer.innerHTML = '';
+
+      if (groupList.length === 0) {
+        historyContainer.innerHTML = `
+          <div class="p-6 text-center text-xs text-slate-500">
+            Nenhum fechamento pago registrado ainda.
+          </div>
+        `;
+        return;
+      }
+
+      groupList.forEach(item => {
+        const row = document.createElement('div');
+        row.className = 'p-4 flex items-center justify-between gap-3 hover:bg-slate-50 transition';
+        row.innerHTML = `
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="text-sm font-extrabold text-[#0f172a]">${escapeHTML(item.name)}</span>
+              <span class="text-[11px] px-2 py-0.5 rounded-full bg-emerald-50 text-[#059669] border border-emerald-200 font-bold">
+                PG • ${item.count} ${item.count === 1 ? 'plantão' : 'plantões'}
+              </span>
+            </div>
+            <p class="text-xs text-slate-500 mt-0.5">
+              Data de Pagamento: <strong class="font-semibold text-slate-700">${formatDateBR(item.date)}</strong>
+            </p>
+          </div>
+          <div class="text-right shrink-0">
+            <span class="text-base font-extrabold text-[#059669]">${formatCurrency(item.total)}</span>
+          </div>
+        `;
+        historyContainer.appendChild(row);
+      });
+    }
+
+    function exportCSV() {
+      // Exatamente as 11 colunas oficiais da aba Registros_BK
+      const headers = [
+        'ID',
+        'Nome_Colaborador',
+        'Data_Entrada',
+        'Hora_Entrada',
+        'Data_Saida',
+        'Hora_Saida',
+        'Duracao',
+        'Valor_Plantao',
+        'Data_Pagamento',
+        'Status',
+        'Notas_Intercorrencias'
+      ];
+
+      const escapeCSV = (val) => {
+        const str = String(val ?? '');
+        if (str.includes(',') || str.includes(';') || str.includes('"') || str.includes('\n')) {
+          return `"${str.replace(/"/g, '""')}"`;
+        }
+        return str;
+      };
+
+      const rows = state.records.map(r => [
+        r.ID,
+        r.Nome_Colaborador,
+        r.Data_Entrada,
+        r.Hora_Entrada,
+        r.Data_Saida,
+        r.Hora_Saida,
+        formatDurationSheet(r.Duracao),
+        Number(r.Valor_Plantao).toFixed(2),
+        r.Data_Pagamento || '',
+        r.Status,
+        r.Notas_Intercorrencias || ''
+      ].map(escapeCSV).join(','));
+
+      // BOM UTF-8 (\uFEFF) para abrir com acentuação perfeita no Excel e Google Sheets
+      const csvContent = '\uFEFF' + [headers.join(','), ...rows].join('\n');
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `Registros_BK_${getTodayISO()}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      showToast('Arquivo CSV (Registros_BK) exportado com sucesso!', 'success');
+    }
+
+    /* =====================================================================
+       ABA 4: CÓPIA DO CÓDIGO APPS SCRIPT
+       ===================================================================== */
+
+    function copyAppsScriptCode() {
+      const btn = document.getElementById('btnCopyCode');
+      const label = document.getElementById('copyCodeLabel');
+
+      // Método compatível com iFrames e navegadores mobile/desktop
+      const tempArea = document.createElement('textarea');
+      tempArea.value = APPS_SCRIPT_CODE;
+      tempArea.setAttribute('readonly', '');
+      tempArea.style.position = 'fixed';
+      tempArea.style.opacity = '0';
+      document.body.appendChild(tempArea);
+      tempArea.select();
+
+      let copied = false;
+      try {
+        copied = document.execCommand('copy');
+      } catch (e) {
+        copied = false;
+      }
+      document.body.removeChild(tempArea);
+
+      if (!copied && navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(APPS_SCRIPT_CODE).catch(() => {});
+      }
+
+      btn.classList.remove('bg-[#0f172a]', 'hover:bg-slate-800');
+      btn.classList.add('bg-[#059669]', 'hover:bg-emerald-700');
+      label.textContent = 'Código Copiado!';
+      showToast('Código Code.gs copiado para a área de transferência!', 'success');
+
+      setTimeout(() => {
+        btn.classList.remove('bg-[#059669]', 'hover:bg-emerald-700');
+        btn.classList.add('bg-[#0f172a]', 'hover:bg-slate-800');
+        label.textContent = 'Copiar Código Code.gs';
+      }, 2500);
+    }
+
+    /* =====================================================================
+       BADGE E TOASTS
+       ===================================================================== */
+
+    function updateOpenBadge() {
+      const openCount = state.records.filter(r => r.Status === 'Em Aberto').length;
+      document.getElementById('openCountBadge').textContent = String(openCount);
+    }
+
+    function showToast(message, type = 'success') {
+      const container = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+
+      const styles = {
+        success: 'bg-[#0f172a] text-white border-l-4 border-[#059669]',
+        error: 'bg-rose-950 text-white border-l-4 border-rose-500',
+        info: 'bg-slate-800 text-white border-l-4 border-[#d97706]'
+      };
+
+      toast.className = `pointer-events-auto rounded-xl px-4 py-3 shadow-xl text-xs sm:text-sm font-semibold flex items-center gap-2 animate-slide-up ${styles[type] || styles.info}`;
+      toast.innerHTML = `<span>${escapeHTML(message)}</span>`;
+
+      container.appendChild(toast);
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transition = 'opacity 0.25s ease';
+        setTimeout(() => toast.remove(), 260);
+      }, 3200);
+    }
+
+    function escapeHTML(str) {
+      return String(str ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    /* =====================================================================
+       INICIALIZAÇÃO DA APLICAÇÃO
+       ===================================================================== */
+
+    window.addEventListener('DOMContentLoaded', async () => {
+      // Preenche o bloco visual do Code.gs de forma segura
+      document.getElementById('appsScriptCodeBlock').textContent = APPS_SCRIPT_CODE;
+
+      // Inicializa formulário na aba Novo Turno com Noturno 10h
+      applyShiftPreset('noturno10', '20:00', '06:00', 1);
+
+      // Verifica se já existe uma URL do Google Apps Script salva anteriormente
+      const savedUrl = localStorage.getItem(STORAGE_KEY_SCRIPT_URL);
+      if (savedUrl) {
+        state.scriptUrl = savedUrl;
+        document.getElementById('scriptUrlInput').value = savedUrl;
+        loadLocalSimulationData();
+        refreshAllViews();
+
+        try {
+          await fetchFromAppsScript(savedUrl, false);
+        } catch (err) {
+          state.isConnected = false;
+          updateConnectionHeaderUI();
+          showToast('Não foi possível sincronizar automaticamente. Verifique a aba Configuração & Script.', 'info');
+        }
+      } else {
+        loadLocalSimulationData();
+        refreshAllViews();
+      }
+    });
+  </script>
+</body>
+</html>
