@@ -2,781 +2,898 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Colaborador Pro</title>
   <meta name="theme-color" content="#0f172a" />
-  <link rel="manifest" href="./manifest.json" />
-  <link rel="icon" type="image/png" sizes="512x512" href="./icon-512.png" />
-  <link rel="apple-touch-icon" href="./icon-512.png" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <title>Colaborador Pro — Gestão Integrada</title>
-  <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    body { -webkit-tap-highlight-color: transparent; background-color: #f1f5f9; }
-    .chip-active { background-color: #0f172a !important; color: #ffffff !important; border-color: #0f172a !important; }
-    .chip-green-active { background-color: #059669 !important; color: #ffffff !important; border-color: #059669 !important; }
-    .chip-amber-active { background-color: #d97706 !important; color: #ffffff !important; border-color: #d97706 !important; }
-    .chip-red-active { background-color: #dc2626 !important; color: #ffffff !important; border-color: #dc2626 !important; }
-    .nav-active { background-color: #059669; color: #ffffff; }
-    .no-scrollbar::-webkit-scrollbar { display: none; }
-    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    :root {
+      --bg-dark: #0f172a;
+      --bg-card: #f8fafc;
+      --bg-page: #e2e8f0;
+      --primary: #0d9488;
+      --primary-dark: #0f766e;
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --border: #cbd5e1;
+      --danger: #dc2626;
+      --warning-bg: #fef3c7;
+      --warning-text: #92400e;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { background: var(--bg-page); color: var(--text-main); padding-bottom: 40px; }
+
+    /* Header */
+    header {
+      background: var(--bg-dark);
+      color: #fff;
+      padding: 14px 16px;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.25);
+    }
+    .header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+    .brand { display: flex; align-items: center; gap: 10px; }
+    .brand-icon {
+      width: 34px; height: 34px; border-radius: 10px; background: rgba(13,148,136,0.2);
+      border: 1px solid var(--primary); display: flex; align-items: center; justify-content: center; font-size: 18px;
+    }
+    .brand h1 { font-size: 16px; font-weight: 700; }
+    .status-line { display: flex; align-items: center; gap: 6px; font-size: 11px; color: #94a3b8; }
+    .dot { width: 8px; height: 8px; border-radius: 50%; background: #eab308; }
+    .dot.ok { background: #22c55e; }
+    .dot.err { background: #ef4444; }
+
+    .header-actions { display: flex; gap: 6px; align-items: center; }
+    .btn-icon {
+      background: #1e293b; color: #e2e8f0; border: 1px solid #334155;
+      padding: 7px 10px; border-radius: 8px; font-size: 12px; cursor: pointer; font-weight: 600;
+    }
+    .btn-icon:active { transform: scale(0.97); }
+
+    .user-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: #1e293b; border: 1px solid #334155; padding: 4px 10px;
+      border-radius: 999px; font-size: 11px; color: #cbd5e1; margin-bottom: 10px;
+    }
+    .user-badge strong { color: #2dd4bf; }
+    .badge-role {
+      background: rgba(13,148,136,0.25); color: #5eead4;
+      padding: 1px 6px; border-radius: 4px; font-size: 10px; text-transform: uppercase;
+    }
+
+    /* Tabs */
+    .tabs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+    .tab-btn {
+      background: #1e293b; color: #94a3b8; border: none; padding: 9px 4px;
+      border-radius: 10px; font-size: 12px; font-weight: 600; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; gap: 4px;
+    }
+    .tab-btn.active { background: var(--primary); color: #fff; }
+
+    /* Container & Cards */
+    .container { max-width: 680px; margin: 14px auto; padding: 0 12px; display: flex; flex-direction: column; gap: 14px; }
+    .card {
+      background: var(--bg-card); border-radius: 16px; padding: 16px;
+      box-shadow: 0 2px 6px rgba(15,23,42,0.06); border: 1px solid #e2e8f0;
+    }
+    .card-title { font-size: 14px; font-weight: 700; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; }
+    .section-label { font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+
+    /* Chips de Colaboradores */
+    .chips-wrap { display: flex; flex-wrap: wrap; gap: 8px; }
+    .chip {
+      padding: 8px 14px; border-radius: 999px; border: 1px solid var(--border);
+      background: #fff; font-size: 13px; font-weight: 600; color: var(--text-main); cursor: pointer;
+    }
+    .chip.selected { background: var(--bg-dark); color: #fff; border-color: var(--bg-dark); }
+
+    /* Forms */
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+    .field { display: flex; flex-direction: column; gap: 4px; margin-bottom: 10px; }
+    label { font-size: 12px; font-weight: 600; color: #334155; }
+    input, select, textarea {
+      width: 100%; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--border);
+      background: #fff; font-size: 14px; color: var(--text-main);
+    }
+    input:focus, select:focus { outline: 2px solid var(--primary); border-color: transparent; }
+
+    .btn-primary {
+      width: 100%; padding: 13px; border-radius: 12px; border: none;
+      background: var(--primary); color: #fff; font-size: 14px; font-weight: 700;
+      cursor: pointer; margin-top: 4px;
+    }
+    .btn-primary:hover { background: var(--primary-dark); }
+    .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    /* Listas e Itens */
+    .list-item {
+      background: #fff; border: 1px solid #e2e8f0; border-radius: 12px;
+      padding: 12px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; gap: 10px;
+    }
+    .item-main { font-size: 13px; font-weight: 700; color: var(--text-main); }
+    .item-sub { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+    .pill-money { background: var(--warning-bg); color: var(--warning-text); padding: 4px 10px; border-radius: 999px; font-size: 12px; font-weight: 700; }
+    .pill-status { font-size: 11px; padding: 3px 8px; border-radius: 6px; font-weight: 700; }
+    .st-aberto { background: #fef3c7; color: #92400e; }
+    .st-pago { background: #dcfce7; color: #166534; }
+    .st-concluido { background: #e2e8f0; color: #334155; }
+
+    .btn-baixa {
+      background: var(--bg-dark); color: #fff; border: none; padding: 8px 12px;
+      border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; white-space: nowrap;
+    }
+
+    /* Quick meds */
+    .quick-pills { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+    .quick-pill {
+      background: #f0fdfa; border: 1px solid #99f6e4; color: #0f766e;
+      padding: 6px 10px; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer;
+    }
+
+    /* Modais */
+    .modal-backdrop {
+      position: fixed; inset: 0; background: rgba(15,23,42,0.75);
+      display: flex; align-items: center; justify-content: center; padding: 16px; z-index: 100;
+    }
+    .modal-box {
+      background: #fff; border-radius: 20px; padding: 22px; width: 100%; max-width: 400px;
+      box-shadow: 0 20px 25px -5px rgba(0,0,0,0.3);
+    }
+    .modal-box h2 { font-size: 18px; margin-bottom: 8px; }
+    .modal-box p { font-size: 13px; color: var(--text-muted); margin-bottom: 14px; line-height: 1.4; }
+    .modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 12px; }
+    .btn-sec { background: #f1f5f9; color: #334155; border: none; padding: 10px 14px; border-radius: 10px; font-weight: 600; cursor: pointer; }
+    .btn-dark { background: var(--bg-dark); color: #fff; border: none; padding: 10px 16px; border-radius: 10px; font-weight: 600; cursor: pointer; }
+
+    .hidden { display: none !important; }
+    .toast {
+      position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+      background: #0f172a; color: #fff; padding: 10px 18px; border-radius: 999px;
+      font-size: 13px; font-weight: 600; z-index: 200; box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    }
   </style>
 </head>
-<body class="text-slate-800 pb-24">
+<body>
 
-  <!-- CABEÇALHO -->
-  <header class="bg-slate-900 text-white sticky top-0 z-30 shadow-md">
-    <div class="max-w-xl mx-auto px-4 pt-3 pb-2 flex items-center justify-between">
-      <div class="flex items-center gap-2.5">
-        <img src="./icon-512.png" alt="Ícone" class="w-9 h-9 rounded-xl object-cover border border-slate-700" />
+  <header>
+    <div class="header-top">
+      <div class="brand">
+        <div class="brand-icon">🛡️</div>
         <div>
-          <h1 class="font-bold text-base leading-tight tracking-tight">Colaborador Pro</h1>
-          <div class="flex items-center gap-1.5 text-[11px] text-slate-300">
-            <span id="statusDot" class="w-2 h-2 rounded-full bg-amber-400 inline-block"></span>
+          <h1>Colaborador Pro</h1>
+          <div class="status-line">
+            <span id="statusDot" class="dot"></span>
             <span id="statusText">Conectando...</span>
           </div>
         </div>
       </div>
-      <div class="flex items-center gap-2">
-        <button onclick="carregarDados()" title="Atualizar dados" class="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium">
-          ↻ Atualizar
-        </button>
-        <button onclick="abrirConfig()" title="Configurar URL" class="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs">
-          ⚙
-        </button>
+      <div class="header-actions">
+        <button class="btn-icon" onclick="carregarDados()">↻ Atualizar</button>
+        <button class="btn-icon" onclick="abrirModalUrl()" title="Configurar URL">⚙️</button>
       </div>
     </div>
 
-    <!-- NAVEGAÇÃO ENTRE OS 4 MÓDULOS -->
-    <nav class="max-w-xl mx-auto px-3 pb-2.5 grid grid-cols-4 gap-1.5 text-xs font-semibold">
-      <button id="tabBtn-turnos" onclick="mudarModulo('turnos')" class="nav-active py-2 px-1 rounded-lg text-center transition">
-        🕒 Turnos
-      </button>
-      <button id="tabBtn-remedios" onclick="mudarModulo('remedios')" class="bg-slate-800 text-slate-300 py-2 px-1 rounded-lg text-center transition">
-        💊 Remédios
-      </button>
-      <button id="tabBtn-alimentacao" onclick="mudarModulo('alimentacao')" class="bg-slate-800 text-slate-300 py-2 px-1 rounded-lg text-center transition">
-        🍽️ Nutrição
-      </button>
-      <button id="tabBtn-saude" onclick="mudarModulo('saude')" class="bg-slate-800 text-slate-300 py-2 px-1 rounded-lg text-center transition">
-        🩺 Saúde
-      </button>
-    </nav>
+    <div id="userBar" class="user-badge hidden">
+      <span>Olá, <strong id="loggedUserName">-</strong></span>
+      <span id="loggedUserRole" class="badge-role">-</span>
+      <button onclick="logout()" style="background:none;border:none;color:#f87171;font-size:11px;font-weight:700;cursor:pointer;margin-left:6px;">Sair</button>
+    </div>
+
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="turnos" onclick="mudarAba('turnos')">🕒 Turnos</button>
+      <button class="tab-btn" data-tab="remedios" onclick="mudarAba('remedios')">💊 Remédios</button>
+      <button class="tab-btn" data-tab="nutricao" onclick="mudarAba('nutricao')">🍽️ Nutrição</button>
+      <button class="tab-btn" data-tab="saude" onclick="mudarAba('saude')">🩺 Saúde</button>
+    </div>
   </header>
 
-  <main class="max-w-xl mx-auto px-4 pt-4 space-y-4">
+  <main class="container">
+    <!-- Seletor de Colaborador (Visível apenas para Gestor) -->
+    <div id="cardSeletorEquipe" class="card hidden">
+      <div class="section-label">Colaborador(a) Responsável pelo Registro</div>
+      <div id="listaColaboradores" class="chips-wrap"></div>
+    </div>
 
-    <!-- SELETOR GLOBAL DE CUIDADORA (COMPARTILHADO) -->
-    <section class="bg-white rounded-2xl p-4 shadow-sm border border-slate-200">
-      <div class="flex items-center justify-between mb-2">
-        <label class="text-xs font-bold uppercase tracking-wider text-slate-500">Colaborador(a) Responsável</label>
-        <span id="colaboradorSelecionadoBadge" class="text-xs font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full hidden"></span>
+    <!-- ABA 1: TURNOS -->
+    <section id="tab-turnos">
+      <div class="card" style="margin-bottom:14px;">
+        <div class="card-title"><span>🟢 Registrar Novo Plantão</span></div>
+        <div class="grid-2">
+          <div class="field">
+            <label>Data Entrada</label>
+            <input type="date" id="tDataEntrada" />
+          </div>
+          <div class="field">
+            <label>Hora Entrada</label>
+            <input type="time" id="tHoraEntrada" value="20:00" />
+          </div>
+        </div>
+        <div class="grid-2">
+          <div class="field">
+            <label>Data Saída</label>
+            <input type="date" id="tDataSaida" />
+          </div>
+          <div class="field">
+            <label>Hora Saída</label>
+            <input type="time" id="tHoraSaida" value="06:00" />
+          </div>
+        </div>
+        <div class="grid-2">
+          <!-- Campo de valor visível apenas para Gestor -->
+          <div id="wrapValorGestor" class="field hidden">
+            <label id="labelValorGestor">Valor/Hora (R$)</label>
+            <input type="number" id="tValorManual" step="0.01" placeholder="Auto" />
+          </div>
+          <div class="field" id="wrapNotasTurno" style="grid-column: span 2;">
+            <label>Notas / Intercorrências</label>
+            <input type="text" id="tNotas" placeholder="Opcional..." />
+          </div>
+        </div>
+        <button class="btn-primary" id="btnSalvarTurno" onclick="salvarTurno()">Salvar Plantão na Planilha</button>
       </div>
-      <div id="listaColaboradores" class="flex flex-wrap gap-2">
-        <span class="text-xs text-slate-400">Carregando equipe...</span>
+
+      <!-- Painel Financeiro (Exclusivo Gestor) -->
+      <div id="cardFinanceiroGestor" class="card hidden" style="margin-bottom:14px;">
+        <div class="card-title">
+          <span>Plantões em Aberto (A Pagar)</span>
+          <span id="totalGeralPagar" class="pill-money">R$ 0,00</span>
+        </div>
+        <div id="listaPendentes"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-title"><span>Últimos Plantões Registrados</span></div>
+        <div id="listaTurnos"></div>
       </div>
     </section>
 
-    <!-- ===================================================================
-         MÓDULO 1: TURNOS & PAGAMENTOS
-         =================================================================== -->
-    <div id="modulo-turnos" class="space-y-4">
-      <section class="bg-white rounded-2xl p-4 shadow-sm border border-slate-200 space-y-3">
-        <h2 class="font-bold text-slate-800 text-sm flex items-center gap-2">
-          <span class="w-2 h-2 rounded-full bg-emerald-600"></span> Registrar Novo Plantão
-        </h2>
-
-        <div class="grid grid-cols-2 gap-3">
-          <div>
-            <label class="block text-xs font-semibold text-slate-600 mb-1">Data Entrada</label>
-            <input type="date" id="turnoDataEntrada" class="w-full border border-slate-300 rounded-xl px-3 py-2 text-sm bg-slate-50" />
+    <!-- ABA 2: REMÉDIOS -->
+    <section id="tab-remedios" class="hidden">
+      <div class="card" style="margin-bottom:14px;">
+        <div class="card-title"><span>💊 Registrar Aplicação de Medicamento</span></div>
+        <div id="quickMeds" class="quick-pills"></div>
+        <div class="field">
+          <label>Medicamento / Dosagem</label>
+          <input type="text" id="rMedicamento" placeholder="Ex.: Prolopa BD (300)" />
+        </div>
+        <div class="grid-2">
+          <div class="field">
+            <label>Data</label>
+            <input type="date" id="rData" />
           </div>
-          <div>
-            <label class="block text-xs font-semibold text-slate-600 mb-1">Hora Entrada</label>
-            <input type="time" id="turnoHoraEntrada" value="20:00" class="w-full border border-slate-300 rounded-xl px-3 py-2 text-sm bg-slate-50" />
-          </div>
-          <div>
-            <label class="block text-xs font-semibold text-slate-600 mb-1">Data Saída</label>
-            <input type="date" id="turnoDataSaida" class="w-full border border-slate-300 rounded-xl px-3 py-2 text-sm bg-slate-50" />
-          </div>
-          <div>
-            <label class="block text-xs font-semibold text-slate-600 mb-1">Hora Saída</label>
-            <input type="time" id="turnoHoraSaida" value="06:00" class="w-full border border-slate-300 rounded-xl px-3 py-2 text-sm bg-slate-50" />
+          <div class="field">
+            <label>Hora</label>
+            <input type="time" id="rHora" />
           </div>
         </div>
-
-        <div class="grid grid-cols-3 gap-3 items-end">
-          <div>
-            <label class="block text-xs font-semibold text-slate-600 mb-1">Valor/Hora (R$)</label>
-            <input type="number" id="turnoValorHora" value="10" step="0.5" class="w-full border border-slate-300 rounded-xl px-3 py-2 text-sm bg-slate-50" />
-          </div>
-          <div class="col-span-2">
-            <label class="block text-xs font-semibold text-slate-600 mb-1">Notas / Intercorrências</label>
-            <input type="text" id="turnoNotas" placeholder="Opcional..." class="w-full border border-slate-300 rounded-xl px-3 py-2 text-sm bg-slate-50" />
-          </div>
+        <div class="field">
+          <label>Observações</label>
+          <input type="text" id="rObs" placeholder="Ex.: Administrado com água após café..." />
         </div>
+        <button class="btn-primary" onclick="salvarRemedio()">Registrar Medicamento</button>
+      </div>
 
-        <button onclick="salvarTurno()" id="btnSalvarTurno" class="w-full bg-emerald-600 hover:bg-emerald-700 active:scale-[0.99] text-white font-bold py-3 rounded-xl shadow-sm transition text-sm">
-          Salvar Plantão na Planilha
-        </button>
-      </section>
+      <div class="card">
+        <div class="card-title"><span>Histórico Recente de Remédios</span></div>
+        <div id="listaRemedios"></div>
+      </div>
+    </section>
 
-      <!-- RESUMO FINANCEIRO EM ABERTO -->
-      <section class="bg-white rounded-2xl p-4 shadow-sm border border-slate-200 space-y-3">
-        <div class="flex items-center justify-between">
-          <h2 class="font-bold text-slate-800 text-sm">Plantões em Aberto (A Pagar)</h2>
-          <span id="totalGeralAberto" class="text-xs font-bold bg-amber-100 text-amber-800 px-2.5 py-1 rounded-full">R$ 0,00</span>
-        </div>
-        <div id="resumoFinanceiro" class="space-y-2"></div>
-      </section>
-
-      <!-- HISTÓRICO RECENTE DE TURNOS -->
-      <section class="bg-white rounded-2xl p-4 shadow-sm border border-slate-200 space-y-2.5">
-        <h2 class="font-bold text-slate-800 text-sm">Últimos Plantões Registrados</h2>
-        <div id="listaTurnos" class="space-y-2 text-xs"></div>
-      </section>
-    </div>
-
-    <!-- ===================================================================
-         MÓDULO 2: APLICAÇÃO DE MEDICAMENTOS
-         =================================================================== -->
-    <div id="modulo-remedios" class="space-y-4 hidden">
-      <section class="bg-white rounded-2xl p-4 shadow-sm border border-slate-200 space-y-3">
-        <h2 class="font-bold text-slate-800 text-sm flex items-center gap-2">
-          <span class="w-2 h-2 rounded-full bg-emerald-600"></span> Registrar Aplicação de Medicamento
-        </h2>
-
-        <div>
-          <label class="block text-xs font-semibold text-slate-600 mb-1.5">Medicamentos Cadastrados (Toque para selecionar)</label>
-          <div id="chipsMedicamentos" class="flex flex-wrap gap-1.5 mb-2"></div>
-          <input type="text" id="remNome" placeholder="Ou digite o nome e dosagem do medicamento..." class="w-full border border-slate-300 rounded-xl px-3 py-2.5 text-sm bg-slate-50" />
-        </div>
-
-        <div class="grid grid-cols-2 gap-3">
-          <div>
-            <label class="block text-xs font-semibold text-slate-600 mb-1">Data da Ministração</label>
-            <input type="date" id="remData" class="w-full border border-slate-300 rounded-xl px-3 py-2 text-sm bg-slate-50" />
+    <!-- ABA 3: NUTRIÇÃO -->
+    <section id="tab-nutricao" class="hidden">
+      <div class="card" style="margin-bottom:14px;">
+        <div class="card-title"><span>🍽️ Registrar Alimentação</span></div>
+        <div class="grid-2">
+          <div class="field">
+            <label>Refeição</label>
+            <select id="aRefeicao">
+              <option value="Café da Manhã">Café da Manhã</option>
+              <option value="Lanche da Manhã">Lanche da Manhã</option>
+              <option value="Almoço" selected>Almoço</option>
+              <option value="Lanche da Tarde">Lanche da Tarde</option>
+              <option value="Jantar">Jantar</option>
+              <option value="Ceia / Hidratação">Ceia / Hidratação</option>
+            </select>
           </div>
-          <div>
-            <label class="block text-xs font-semibold text-slate-600 mb-1">Hora da Ministração</label>
-            <input type="time" id="remHora" class="w-full border border-slate-300 rounded-xl px-3 py-2 text-sm bg-slate-50" />
+          <div class="field">
+            <label>Aceitação</label>
+            <select id="aAceitacao">
+              <option value="Aceitou bem">Aceitou bem</option>
+              <option value="Aceitou parcialmente">Aceitou parcialmente</option>
+              <option value="Recusou">Recusou</option>
+            </select>
           </div>
         </div>
-
-        <div>
-          <label class="block text-xs font-semibold text-slate-600 mb-1">Observações</label>
-          <input type="text" id="remObs" placeholder="Ex.: Administrado com água, sem intercorrências..." class="w-full border border-slate-300 rounded-xl px-3 py-2 text-sm bg-slate-50" />
-        </div>
-
-        <button onclick="salvarRemedio()" id="btnSalvarRemedio" class="w-full bg-emerald-600 hover:bg-emerald-700 active:scale-[0.99] text-white font-bold py-3 rounded-xl shadow-sm transition text-sm">
-          Registrar Medicamento
-        </button>
-      </section>
-
-      <section class="bg-white rounded-2xl p-4 shadow-sm border border-slate-200 space-y-2.5">
-        <h2 class="font-bold text-slate-800 text-sm">Últimas Medicações Aplicadas</h2>
-        <div id="listaRemedios" class="space-y-2 text-xs"></div>
-      </section>
-    </div>
-
-    <!-- ===================================================================
-         MÓDULO 3: REGISTRO DE ALIMENTAÇÃO
-         =================================================================== -->
-    <div id="modulo-alimentacao" class="space-y-4 hidden">
-      <section class="bg-white rounded-2xl p-4 shadow-sm border border-slate-200 space-y-3">
-        <h2 class="font-bold text-slate-800 text-sm flex items-center gap-2">
-          <span class="w-2 h-2 rounded-full bg-emerald-600"></span> Registrar Alimentação / Hidratação
-        </h2>
-
-        <div>
-          <label class="block text-xs font-semibold text-slate-600 mb-1.5">Refeição</label>
-          <div id="chipsRefeicao" class="flex flex-wrap gap-1.5">
-            <button type="button" onclick="selecionarChip('refeicao', 'Café da manhã', this)" class="chip-refeicao border border-slate-300 rounded-xl px-3 py-1.5 text-xs font-semibold bg-slate-50">Café da manhã</button>
-            <button type="button" onclick="selecionarChip('refeicao', 'Lanche da manhã', this)" class="chip-refeicao border border-slate-300 rounded-xl px-3 py-1.5 text-xs font-semibold bg-slate-50">Lanche manhã</button>
-            <button type="button" onclick="selecionarChip('refeicao', 'Almoço', this)" class="chip-refeicao border border-slate-300 rounded-xl px-3 py-1.5 text-xs font-semibold bg-slate-50">Almoço</button>
-            <button type="button" onclick="selecionarChip('refeicao', 'Lanche da tarde', this)" class="chip-refeicao border border-slate-300 rounded-xl px-3 py-1.5 text-xs font-semibold bg-slate-50">Lanche tarde</button>
-            <button type="button" onclick="selecionarChip('refeicao', 'Jantar', this)" class="chip-refeicao border border-slate-300 rounded-xl px-3 py-1.5 text-xs font-semibold bg-slate-50">Jantar</button>
-            <button type="button" onclick="selecionarChip('refeicao', 'Ceia', this)" class="chip-refeicao border border-slate-300 rounded-xl px-3 py-1.5 text-xs font-semibold bg-slate-50">Ceia</button>
-            <button type="button" onclick="selecionarChip('refeicao', 'Hidratação / Líquidos', this)" class="chip-refeicao border border-slate-300 rounded-xl px-3 py-1.5 text-xs font-semibold bg-slate-50">💧 Líquidos</button>
+        <div class="grid-2">
+          <div class="field">
+            <label>Data</label>
+            <input type="date" id="aData" />
+          </div>
+          <div class="field">
+            <label>Hora</label>
+            <input type="time" id="aHora" />
           </div>
         </div>
-
-        <div class="grid grid-cols-2 gap-3">
-          <div>
-            <label class="block text-xs font-semibold text-slate-600 mb-1">Data</label>
-            <input type="date" id="alimData" class="w-full border border-slate-300 rounded-xl px-3 py-2 text-sm bg-slate-50" />
-          </div>
-          <div>
-            <label class="block text-xs font-semibold text-slate-600 mb-1">Hora</label>
-            <input type="time" id="alimHora" class="w-full border border-slate-300 rounded-xl px-3 py-2 text-sm bg-slate-50" />
-          </div>
+        <div class="field">
+          <label>Descrição dos Alimentos / Líquidos</label>
+          <input type="text" id="aDescricao" placeholder="Ex.: Sopa de legumes, suco natural..." />
         </div>
-
-        <div>
-          <label class="block text-xs font-semibold text-slate-600 mb-1">Descrição do Alimento</label>
-          <input type="text" id="alimDescricao" placeholder="Ex.: Sopa de legumes, purê, suco de laranja 200ml..." class="w-full border border-slate-300 rounded-xl px-3 py-2 text-sm bg-slate-50" />
+        <div class="field">
+          <label>Notas / Observações</label>
+          <input type="text" id="aNotas" placeholder="Opcional..." />
         </div>
+        <button class="btn-primary" onclick="salvarAlimentacao()">Registrar Alimentação</button>
+      </div>
 
-        <div>
-          <label class="block text-xs font-semibold text-slate-600 mb-1.5">Grau de Aceitação</label>
-          <div class="grid grid-cols-3 gap-2">
-            <button type="button" onclick="selecionarAceitacao('Aceitou bem', this, 'chip-green-active')" class="chip-aceitacao border border-slate-300 rounded-xl py-2 text-xs font-bold bg-slate-50">✅ Aceitou bem</button>
-            <button type="button" onclick="selecionarAceitacao('Parcial', this, 'chip-amber-active')" class="chip-aceitacao border border-slate-300 rounded-xl py-2 text-xs font-bold bg-slate-50">⚠️ Parcial</button>
-            <button type="button" onclick="selecionarAceitacao('Recusou', this, 'chip-red-active')" class="chip-aceitacao border border-slate-300 rounded-xl py-2 text-xs font-bold bg-slate-50">❌ Recusou</button>
+      <div class="card">
+        <div class="card-title"><span>Histórico Recente de Alimentação</span></div>
+        <div id="listaAlimentacao"></div>
+      </div>
+    </section>
+
+    <!-- ABA 4: SAÚDE -->
+    <section id="tab-saude" class="hidden">
+      <div class="card" style="margin-bottom:14px;">
+        <div class="card-title"><span>🩺 Registrar Diário de Saúde</span></div>
+        <div class="grid-2">
+          <div class="field">
+            <label>Data</label>
+            <input type="date" id="sData" />
           </div>
-        </div>
-
-        <div>
-          <label class="block text-xs font-semibold text-slate-600 mb-1">Notas / Observações</label>
-          <input type="text" id="alimNotas" placeholder="Opcional..." class="w-full border border-slate-300 rounded-xl px-3 py-2 text-sm bg-slate-50" />
-        </div>
-
-        <button onclick="salvarAlimentacao()" id="btnSalvarAlimentacao" class="w-full bg-emerald-600 hover:bg-emerald-700 active:scale-[0.99] text-white font-bold py-3 rounded-xl shadow-sm transition text-sm">
-          Registrar Alimentação
-        </button>
-      </section>
-
-      <section class="bg-white rounded-2xl p-4 shadow-sm border border-slate-200 space-y-2.5">
-        <h2 class="font-bold text-slate-800 text-sm">Últimas Refeições Registradas</h2>
-        <div id="listaAlimentacao" class="space-y-2 text-xs"></div>
-      </section>
-    </div>
-
-    <!-- ===================================================================
-         MÓDULO 4: DIÁRIO DE SAÚDE (SINAIS VITAIS & ELIMINAÇÕES)
-         =================================================================== -->
-    <div id="modulo-saude" class="space-y-4 hidden">
-      <section class="bg-white rounded-2xl p-4 shadow-sm border border-slate-200 space-y-3">
-        <h2 class="font-bold text-slate-800 text-sm flex items-center gap-2">
-          <span class="w-2 h-2 rounded-full bg-emerald-600"></span> Registrar Diário de Saúde
-        </h2>
-
-        <div class="grid grid-cols-2 gap-3">
-          <div>
-            <label class="block text-xs font-semibold text-slate-600 mb-1">Data da Medição</label>
-            <input type="date" id="saudeData" class="w-full border border-slate-300 rounded-xl px-3 py-2 text-sm bg-slate-50" />
-          </div>
-          <div>
-            <label class="block text-xs font-semibold text-slate-600 mb-1">Hora da Medição</label>
-            <input type="time" id="saudeHora" class="w-full border border-slate-300 rounded-xl px-3 py-2 text-sm bg-slate-50" />
+          <div class="field">
+            <label>Hora</label>
+            <input type="time" id="sHora" />
           </div>
         </div>
-
-        <!-- PRESSÃO ARTERIAL SEPARADA (SISTÓLICA / DIASTÓLICA) -->
-        <div class="bg-slate-50 p-3 rounded-xl border border-slate-200">
-          <label class="block text-xs font-bold text-slate-700 mb-1.5">Pressão Arterial (mmHg)</label>
-          <div class="grid grid-cols-2 gap-3">
-            <div>
-              <span class="block text-[11px] text-slate-500 mb-0.5">Sistólica (Máxima)</span>
-              <input type="number" inputmode="numeric" id="saudeSistolica" placeholder="Ex.: 120" class="w-full border border-slate-300 rounded-xl px-3 py-2 text-sm bg-white" />
-            </div>
-            <div>
-              <span class="block text-[11px] text-slate-500 mb-0.5">Diastólica (Mínima)</span>
-              <input type="number" inputmode="numeric" id="saudeDiastolica" placeholder="Ex.: 80" class="w-full border border-slate-300 rounded-xl px-3 py-2 text-sm bg-white" />
-            </div>
+        <div class="grid-2">
+          <div class="field">
+            <label>PA Sistólica (Máx)</label>
+            <input type="number" id="sSistolica" placeholder="Ex.: 120" />
+          </div>
+          <div class="field">
+            <label>PA Diastólica (Mín)</label>
+            <input type="number" id="sDiastolica" placeholder="Ex.: 80" />
           </div>
         </div>
-
-        <div class="grid grid-cols-2 gap-3">
-          <div>
-            <label class="block text-xs font-semibold text-slate-600 mb-1">Glicemia (mg/dL)</label>
-            <input type="number" inputmode="numeric" id="saudeGlicemia" placeholder="Ex.: 98" class="w-full border border-slate-300 rounded-xl px-3 py-2 text-sm bg-slate-50" />
+        <div class="grid-2">
+          <div class="field">
+            <label>Temperatura (°C)</label>
+            <input type="number" step="0.1" id="sTemp" placeholder="Ex.: 36.5" />
           </div>
-          <div>
-            <label class="block text-xs font-semibold text-slate-600 mb-1">Temperatura (ºC)</label>
-            <input type="number" inputmode="decimal" step="0.1" id="saudeTemperatura" placeholder="Ex.: 36.5" class="w-full border border-slate-300 rounded-xl px-3 py-2 text-sm bg-slate-50" />
-          </div>
-        </div>
-
-        <div>
-          <label class="block text-xs font-semibold text-slate-600 mb-1.5">Evacuação</label>
-          <div class="grid grid-cols-3 gap-2">
-            <button type="button" onclick="selecionarEstadoSaude('evacuacao', 'Normal', this, 'chip-green-active')" class="chip-evacuacao border border-slate-300 rounded-xl py-2 text-xs font-bold bg-slate-50">Normal</button>
-            <button type="button" onclick="selecionarEstadoSaude('evacuacao', 'Alterado', this, 'chip-amber-active')" class="chip-evacuacao border border-slate-300 rounded-xl py-2 text-xs font-bold bg-slate-50">Alterado</button>
-            <button type="button" onclick="selecionarEstadoSaude('evacuacao', 'Ausente', this, 'chip-active')" class="chip-evacuacao border border-slate-300 rounded-xl py-2 text-xs font-bold bg-slate-50">Ausente</button>
+          <div class="field">
+            <label>Glicemia (mg/dL)</label>
+            <input type="number" id="sGlicemia" placeholder="Ex.: 98" />
           </div>
         </div>
-
-        <div>
-          <label class="block text-xs font-semibold text-slate-600 mb-1.5">Urina (Diurese)</label>
-          <div class="grid grid-cols-3 gap-2">
-            <button type="button" onclick="selecionarEstadoSaude('urina', 'Normal', this, 'chip-green-active')" class="chip-urina border border-slate-300 rounded-xl py-2 text-xs font-bold bg-slate-50">Normal</button>
-            <button type="button" onclick="selecionarEstadoSaude('urina', 'Alterada', this, 'chip-amber-active')" class="chip-urina border border-slate-300 rounded-xl py-2 text-xs font-bold bg-slate-50">Alterada</button>
-            <button type="button" onclick="selecionarEstadoSaude('urina', 'Ausente', this, 'chip-active')" class="chip-urina border border-slate-300 rounded-xl py-2 text-xs font-bold bg-slate-50">Ausente</button>
+        <div class="grid-2">
+          <div class="field">
+            <label>Evacuação</label>
+            <select id="sEvacuacao">
+              <option value="Normal">Normal</option>
+              <option value="Não evacuou">Não evacuou</option>
+              <option value="Pastosa / Diarreia">Pastosa / Diarreia</option>
+              <option value="Ressecada">Ressecada</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Urina</label>
+            <select id="sUrina">
+              <option value="Normal">Normal</option>
+              <option value="Pouca quantidade">Pouca quantidade</option>
+              <option value="Escura / Concentrada">Escura / Concentrada</option>
+            </select>
           </div>
         </div>
-
-        <div>
-          <label class="block text-xs font-semibold text-slate-600 mb-1">Notas / Observações Clínicas</label>
-          <input type="text" id="saudeNotas" placeholder="Ex.: Humor, sono, dor, aspecto se alterado..." class="w-full border border-slate-300 rounded-xl px-3 py-2 text-sm bg-slate-50" />
+        <div class="field">
+          <label>Notas Clínicas / Observações</label>
+          <input type="text" id="sNotas" placeholder="Sono, humor, queixas..." />
         </div>
+        <button class="btn-primary" onclick="salvarSaude()">Registrar Diário de Saúde</button>
+      </div>
 
-        <button onclick="salvarSaude()" id="btnSalvarSaude" class="w-full bg-emerald-600 hover:bg-emerald-700 active:scale-[0.99] text-white font-bold py-3 rounded-xl shadow-sm transition text-sm">
-          Registrar Diário de Saúde
-        </button>
-      </section>
-
-      <section class="bg-white rounded-2xl p-4 shadow-sm border border-slate-200 space-y-2.5">
-        <h2 class="font-bold text-slate-800 text-sm">Últimos Registros de Saúde</h2>
-        <div id="listaSaude" class="space-y-2 text-xs"></div>
-      </section>
-    </div>
-
+      <div class="card">
+        <div class="card-title"><span>Histórico Recente de Saúde</span></div>
+        <div id="listaSaude"></div>
+      </div>
+    </section>
   </main>
 
-  <!-- MODAL CONFIGURAÇÃO URL APPS SCRIPT -->
-  <div id="modalConfig" class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl max-w-md w-full p-5 space-y-4 shadow-xl">
-      <h3 class="font-bold text-base text-slate-900">Conexão com a Planilha</h3>
-      <p class="text-xs text-slate-600">Cole abaixo a URL do Web App do Google Apps Script (terminada em <code>/exec</code>):</p>
-      <input type="url" id="inputScriptUrl" placeholder="https://script.google.com/macros/s/.../exec" class="w-full border border-slate-300 rounded-xl px-3 py-2.5 text-xs" />
-      <div class="flex justify-end gap-2">
-        <button onclick="fecharConfig()" class="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 bg-slate-100">Cancelar</button>
-        <button onclick="salvarConfig()" class="px-4 py-2 rounded-xl text-xs font-bold text-white bg-slate-900">Salvar Conexão</button>
+  <!-- MODAL 1: URL DO APPS SCRIPT -->
+  <div id="modalUrl" class="modal-backdrop hidden">
+    <div class="modal-box">
+      <h2>Conexão com a Planilha</h2>
+      <p>Cole abaixo a URL do Web App do Google Apps Script (terminada em /exec):</p>
+      <input type="url" id="inputScriptUrl" placeholder="https://script.google.com/macros/s/.../exec" />
+      <div class="modal-actions">
+        <button class="btn-sec" onclick="fecharModalUrl()">Cancelar</button>
+        <button class="btn-dark" onclick="salvarUrl()">Salvar Conexão</button>
       </div>
     </div>
   </div>
 
-  <!-- TOAST DE FEEDBACK -->
-  <div id="toast" class="fixed bottom-5 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-xs font-semibold px-4 py-3 rounded-xl shadow-lg z-50 hidden max-w-[90vw] text-center"></div>
+  <!-- MODAL 2: LOGIN POR PIN -->
+  <div id="modalLogin" class="modal-backdrop hidden">
+    <div class="modal-box">
+      <h2>🔐 Acesso Colaborador Pro</h2>
+      <p>Selecione seu nome e digite seu PIN cadastrado na planilha:</p>
+      <div class="field">
+        <label>Quem está acessando?</label>
+        <select id="loginSelectUser"></select>
+      </div>
+      <div class="field">
+        <label>PIN / Senha Simples</label>
+        <input type="password" id="loginInputPin" inputmode="numeric" placeholder="Digite seu PIN (ou deixe vazio se sem senha)" />
+      </div>
+      <div id="loginErrorMsg" style="color:#dc2626;font-size:12px;font-weight:600;margin-top:4px;" class="hidden"></div>
+      <div class="modal-actions">
+        <button class="btn-dark" style="width:100%;" onclick="realizarLogin()">Entrar no Aplicativo</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast hidden"></div>
 
   <script>
-    const STORAGE_KEY_URL = "colaborador_pro_script_url";
-    const STORAGE_KEY_COLAB = "colaborador_pro_selected_colab";
+    const STORAGE_KEY_URL = "cpro_script_url_v2";
+    const STORAGE_KEY_USER = "cpro_logged_user_v1";
 
     let state = {
       scriptUrl: localStorage.getItem(STORAGE_KEY_URL) || "",
-      colaborador: localStorage.getItem(STORAGE_KEY_COLAB) || "",
+      currentUser: JSON.parse(localStorage.getItem(STORAGE_KEY_USER) || "null"),
+      selectedColab: "",
       colaboradores: [],
       medicamentos: [],
       turnos: [],
-      remedios: [],
+      historicoRemedios: [],
       alimentacao: [],
-      saude: [],
-      refeicaoSelecionada: "",
-      aceitacaoSelecionada: "",
-      evacuacaoSelecionada: "",
-      urinaSelecionada: ""
+      saude: []
     };
 
     window.addEventListener("DOMContentLoaded", () => {
-      preencherDatasHorasAtuais();
+      preencherDatasAtuais();
       if (!state.scriptUrl) {
-        abrirConfig();
+        abrirModalUrl();
       } else {
         carregarDados();
       }
     });
 
-    function preencherDatasHorasAtuais() {
+    function preencherDatasAtuais() {
       const agora = new Date();
-      const hojeISO = agora.toISOString().split("T")[0];
-      const ontem = new Date(agora.getTime() - 86400000);
-      const ontemISO = ontem.toISOString().split("T")[0];
-      const horaAtual = String(agora.getHours()).padStart(2, "0") + ":" + String(agora.getMinutes()).padStart(2, "0");
+      const hoje = agora.toISOString().split("T")[0];
+      const horaAtual = agora.toTimeString().slice(0, 5);
 
-      document.getElementById("turnoDataEntrada").value = ontemISO;
-      document.getElementById("turnoDataSaida").value = hojeISO;
+      const ontemDate = new Date(agora);
+      ontemDate.setDate(agora.getDate() - 1);
+      const ontem = ontemDate.toISOString().split("T")[0];
 
-      document.getElementById("remData").value = hojeISO;
-      document.getElementById("remHora").value = horaAtual;
-
-      document.getElementById("alimData").value = hojeISO;
-      document.getElementById("alimHora").value = horaAtual;
-
-      document.getElementById("saudeData").value = hojeISO;
-      document.getElementById("saudeHora").value = horaAtual;
-    }
-
-    function mudarModulo(mod) {
-      ["turnos", "remedios", "alimentacao", "saude"].forEach(m => {
-        document.getElementById(`modulo-${m}`).classList.toggle("hidden", m !== mod);
-        const btn = document.getElementById(`tabBtn-${m}`);
-        if (m === mod) {
-          btn.classList.add("nav-active");
-          btn.classList.remove("bg-slate-800", "text-slate-300");
-        } else {
-          btn.classList.remove("nav-active");
-          btn.classList.add("bg-slate-800", "text-slate-300");
-        }
-      });
-    }
-
-    function setStatus(ok, texto) {
-      const dot = document.getElementById("statusDot");
-      const label = document.getElementById("statusText");
-      dot.className = `w-2 h-2 rounded-full inline-block ${ok ? "bg-emerald-400" : "bg-amber-400"}`;
-      label.textContent = texto;
+      document.getElementById("tDataEntrada").value = ontem;
+      document.getElementById("tDataSaida").value = hoje;
+      ["rData", "aData", "sData"].forEach(id => document.getElementById(id).value = hoje);
+      ["rHora", "aHora", "sHora"].forEach(id => document.getElementById(id).value = horaAtual);
     }
 
     function showToast(msg) {
-      const t = document.getElementById("toast");
-      t.textContent = msg;
-      t.classList.remove("hidden");
-      setTimeout(() => t.classList.add("hidden"), 3800);
+      const el = document.getElementById("toast");
+      el.textContent = msg;
+      el.classList.remove("hidden");
+      setTimeout(() => el.classList.add("hidden"), 3200);
     }
 
-    function abrirConfig() {
+    function abrirModalUrl() {
       document.getElementById("inputScriptUrl").value = state.scriptUrl;
-      document.getElementById("modalConfig").classList.remove("hidden");
+      document.getElementById("modalUrl").classList.remove("hidden");
     }
-    function fecharConfig() {
-      document.getElementById("modalConfig").classList.add("hidden");
+    function fecharModalUrl() {
+      document.getElementById("modalUrl").classList.add("hidden");
     }
-    function salvarConfig() {
+    function salvarUrl() {
       const url = document.getElementById("inputScriptUrl").value.trim();
-      if (!url) return showToast("Informe a URL do Apps Script.");
+      if (!url.includes("/exec")) {
+        alert("Por favor, cole uma URL válida terminada em /exec.");
+        return;
+      }
       state.scriptUrl = url;
       localStorage.setItem(STORAGE_KEY_URL, url);
-      fecharConfig();
+      fecharModalUrl();
       carregarDados();
     }
 
+    function mudarAba(tab) {
+      document.querySelectorAll(".tab-btn").forEach(b => b.classList.toggle("active", b.dataset.tab === tab));
+      ["turnos", "remedios", "nutricao", "saude"].forEach(t => {
+        document.getElementById("tab-" + t).classList.toggle("hidden", t !== tab);
+      });
+    }
+
+    async function apiCall(payload) {
+      const res = await fetch(state.scriptUrl, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify(payload)
+      });
+      return await res.json();
+    }
+
     async function carregarDados() {
-      if (!state.scriptUrl) return abrirConfig();
-      setStatus(false, "Sincronizando...");
+      const dot = document.getElementById("statusDot");
+      const txt = document.getElementById("statusText");
+      dot.className = "dot";
+      txt.textContent = "Conectando...";
+
       try {
-        const res = await fetch(`${state.scriptUrl}?action=init`);
+        const res = await fetch(state.scriptUrl + "?action=getInitialData");
         const data = await res.json();
-        if (data.status !== "success") throw new Error(data.message || "Falha ao ler dados");
+        if (data.status !== "success") throw new Error(data.message);
 
         state.colaboradores = data.colaboradores || [];
-        state.medicamentos  = data.medicamentos || [];
-        state.turnos        = data.turnos || [];
-        state.remedios      = data.remedios || [];
-        state.alimentacao   = data.alimentacao || [];
-        state.saude         = data.saude || [];
+        state.medicamentos = data.medicamentos || [];
+        state.turnos = data.turnos || [];
+        state.historicoRemedios = data.historicoRemedios || [];
+        state.alimentacao = data.alimentacao || [];
+        state.saude = data.saude || [];
 
-        renderizarColaboradores();
-        renderizarChipsMedicamentos();
-        renderizarTurnos();
-        renderizarRemedios();
-        renderizarAlimentacao();
-        renderizarSaude();
+        dot.className = "dot ok";
+        txt.textContent = "Planilha Conectada";
 
-        setStatus(true, "Planilha Conectada");
+        verificarSessao();
       } catch (err) {
-        setStatus(false, "Erro de conexão");
-        showToast("Erro ao conectar: " + err.message);
+        dot.className = "dot err";
+        txt.textContent = "Erro de conexão";
+        showToast("Falha ao conectar com a planilha.");
+      }
+    }
+
+    function verificarSessao() {
+      // Popula select do modal de login
+      const sel = document.getElementById("loginSelectUser");
+      sel.innerHTML = state.colaboradores.map(c => `<option value="${c.nome}">${c.nome}</option>`).join("");
+
+      if (!state.currentUser) {
+        document.getElementById("modalLogin").classList.remove("hidden");
+        return;
+      }
+
+      // Atualiza dados do usuário logado com base na planilha atual
+      const atualizado = state.colaboradores.find(c => c.nome === state.currentUser.nome);
+      if (!atualizado) {
+        logout();
+        return;
+      }
+      state.currentUser = atualizado;
+      localStorage.setItem(STORAGE_KEY_USER, JSON.stringify(atualizado));
+      document.getElementById("modalLogin").classList.add("hidden");
+
+      aplicarPermissoesUI();
+      renderizarTudo();
+    }
+
+    async function realizarLogin() {
+      const nome = document.getElementById("loginSelectUser").value;
+      const pin = document.getElementById("loginInputPin").value.trim();
+      const errEl = document.getElementById("loginErrorMsg");
+      errEl.classList.add("hidden");
+
+      try {
+        const resp = await apiCall({ action: "login", nome, pin });
+        if (resp.status !== "success") {
+          errEl.textContent = resp.message;
+          errEl.classList.remove("hidden");
+          return;
+        }
+        state.currentUser = resp.user;
+        state.selectedColab = resp.user.nome;
+        localStorage.setItem(STORAGE_KEY_USER, JSON.stringify(resp.user));
+        document.getElementById("loginInputPin").value = "";
+        document.getElementById("modalLogin").classList.add("hidden");
+
+        aplicarPermissoesUI();
+        renderizarTudo();
+        showToast("Bem-vindo(a), " + resp.user.nome + "!");
+      } catch (e) {
+        errEl.textContent = "Erro ao validar login.";
+        errEl.classList.remove("hidden");
+      }
+    }
+
+    function logout() {
+      state.currentUser = null;
+      localStorage.removeItem(STORAGE_KEY_USER);
+      document.getElementById("userBar").classList.add("hidden");
+      document.getElementById("modalLogin").classList.remove("hidden");
+    }
+
+    function isGestor() {
+      return state.currentUser && state.currentUser.perfil.toLowerCase() === "gestor";
+    }
+
+    function aplicarPermissoesUI() {
+      const user = state.currentUser;
+      document.getElementById("userBar").classList.remove("hidden");
+      document.getElementById("loggedUserName").textContent = user.nome;
+      document.getElementById("loggedUserRole").textContent = user.perfil;
+
+      if (isGestor()) {
+        // Gestor vê seletor de equipe, painel financeiro e campo de valor
+        document.getElementById("cardSeletorEquipe").classList.remove("hidden");
+        document.getElementById("cardFinanceiroGestor").classList.remove("hidden");
+        document.getElementById("wrapValorGestor").classList.remove("hidden");
+        document.getElementById("wrapNotasTurno").style.gridColumn = "span 1";
+        if (!state.selectedColab) state.selectedColab = user.nome;
+      } else {
+        // Colaborador: travado no próprio nome e sem painel financeiro
+        state.selectedColab = user.nome;
+        document.getElementById("cardSeletorEquipe").classList.add("hidden");
+        document.getElementById("cardFinanceiroGestor").classList.add("hidden");
+        document.getElementById("wrapValorGestor").classList.add("hidden");
+        document.getElementById("wrapNotasTurno").style.gridColumn = "span 2";
       }
     }
 
     function selecionarColaborador(nome) {
-      state.colaborador = nome;
-      localStorage.setItem(STORAGE_KEY_COLAB, nome);
-      renderizarColaboradores();
+      state.selectedColab = nome;
+      renderColaboradores();
+      atualizarCampoValorGestor();
     }
 
-    function renderizarColaboradores() {
-      const container = document.getElementById("listaColaboradores");
-      const badge = document.getElementById("colaboradorSelecionadoBadge");
+    function atualizarCampoValorGestor() {
+      if (!isGestor()) return;
+      const colabObj = state.colaboradores.find(c => c.nome === state.selectedColab);
+      const lbl = document.getElementById("labelValorGestor");
+      const inp = document.getElementById("tValorManual");
+      if (!colabObj) return;
 
-      if (state.colaborador) {
-        badge.textContent = `Ativa: ${state.colaborador}`;
-        badge.classList.remove("hidden");
+      if (colabObj.tipoPagamento === "Fixo_Plantao") {
+        lbl.textContent = "Valor Fixo Plantão (R$)";
+        inp.value = colabObj.valorBase;
+      } else if (colabObj.tipoPagamento === "Hora") {
+        lbl.textContent = "Valor/Hora (R$)";
+        inp.value = colabObj.valorBase;
       } else {
-        badge.classList.add("hidden");
+        lbl.textContent = "Valor (Sem Remuneração)";
+        inp.value = 0;
+      }
+    }
+
+    function renderColaboradores() {
+      const wrap = document.getElementById("listaColaboradores");
+      wrap.innerHTML = state.colaboradores.map(c => `
+        <button class="chip ${c.nome === state.selectedColab ? "selected" : ""}"
+                onclick="selecionarColaborador('${c.nome}')">${c.nome}</button>
+      `).join("");
+      atualizarCampoValorGestor();
+    }
+
+    function renderizarTudo() {
+      renderColaboradores();
+      renderTurnos();
+      renderRemedios();
+      renderAlimentacao();
+      renderSaude();
+    }
+
+    function renderTurnos() {
+      const gestor = isGestor();
+
+      // 1. Painel A Pagar (somente Gestor)
+      if (gestor) {
+        const pendentesMap = {};
+        let totalGeral = 0;
+        state.turnos.forEach(t => {
+          if (t.status === "Aberto" && t.valorPlantao > 0) {
+            if (!pendentesMap[t.colaborador]) pendentesMap[t.colaborador] = { qtd: 0, total: 0 };
+            pendentesMap[t.colaborador].qtd++;
+            pendentesMap[t.colaborador].total += t.valorPlantao;
+            totalGeral += t.valorPlantao;
+          }
+        });
+
+        document.getElementById("totalGeralPagar").textContent = `R$ ${totalGeral.toFixed(2)}`;
+        const listaPend = document.getElementById("listaPendentes");
+        const nomes = Object.keys(pendentesMap);
+        if (nomes.length === 0) {
+          listaPend.innerHTML = `<div class="item-sub">Nenhum plantão pendente de pagamento.</div>`;
+        } else {
+          listaPend.innerHTML = nomes.map(nome => `
+            <div class="list-item">
+              <div>
+                <div class="item-main">${nome}</div>
+                <div class="item-sub">${pendentesMap[nome].qtd} plantão(ões) • R$ ${pendentesMap[nome].total.toFixed(2)}</div>
+              </div>
+              <button class="btn-baixa" onclick="darBaixa('${nome}')">Dar Baixa</button>
+            </div>
+          `).join("");
+        }
       }
 
-      container.innerHTML = state.colaboradores.map(nome => {
-        const ativo = state.colaborador === nome;
-        return `<button type="button" onclick="selecionarColaborador('${nome}')"
-          class="px-3.5 py-2 rounded-xl text-xs font-bold border transition ${ativo ? "chip-active shadow-sm" : "bg-slate-50 border-slate-300 text-slate-700 hover:bg-slate-100"}">
-          ${nome}
-        </button>`;
+      // 2. Lista de Últimos Plantões (Gestor vê todos com valores; Colaborador vê só os seus)
+      const turnosFiltrados = gestor
+        ? state.turnos.slice(0, 20)
+        : state.turnos.filter(t => t.colaborador === state.currentUser.nome).slice(0, 20);
+
+      const listaT = document.getElementById("listaTurnos");
+      if (turnosFiltrados.length === 0) {
+        listaT.innerHTML = `<div class="item-sub">Nenhum plantão registrado ainda.</div>`;
+        return;
+      }
+
+      listaT.innerHTML = turnosFiltrados.map(t => {
+        const mostrarCifra = gestor || (t.valorPlantao > 0);
+        const infoValor = mostrarCifra ? ` • <strong>R$ ${t.valorPlantao.toFixed(2)}</strong>` : "";
+        const stClass = t.status === "Pago" ? "st-pago" : (t.status === "Concluido" ? "st-concluido" : "st-aberto");
+
+        return `
+          <div class="list-item">
+            <div>
+              <div class="item-main">${t.colaborador} <span style="font-weight:400;color:#64748b;">(${t.dataEntrada} ${t.horaEntrada} → ${t.horaSaida})</span></div>
+              <div class="item-sub">Duração: ${t.duracao}${infoValor}${t.notas ? " • " + t.notas : ""}</div>
+            </div>
+            ${mostrarCifra ? `<span class="pill-status ${stClass}">${t.status}</span>` : ""}
+          </div>
+        `;
       }).join("");
     }
 
-    function renderizarChipsMedicamentos() {
-      const container = document.getElementById("chipsMedicamentos");
-      if (!state.medicamentos.length) {
-        container.innerHTML = "";
-        return;
-      }
-      container.innerHTML = state.medicamentos.map(med => `
-        <button type="button" onclick="document.getElementById('remNome').value='${med.replace(/'/g, "\\'")}'"
-          class="px-3 py-1.5 rounded-xl text-xs font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200 hover:bg-emerald-100">
-          + ${med}
-        </button>
-      `).join("");
-    }
+    function renderRemedios() {
+      const quick = document.getElementById("quickMeds");
+      quick.innerHTML = state.medicamentos.map(m => {
+        const label = m.dosagem ? `${m.nome} (${m.dosagem})` : m.nome;
+        return `<button class="quick-pill" onclick="document.getElementById('rMedicamento').value='${label}'">+ ${label}</button>`;
+      }).join("");
 
-    function selecionarChip(tipo, valor, el) {
-      if (tipo === "refeicao") {
-        state.refeicaoSelecionada = valor;
-        document.querySelectorAll(".chip-refeicao").forEach(b => b.classList.remove("chip-active"));
-        el.classList.add("chip-active");
-      }
-    }
-
-    function selecionarAceitacao(valor, el, classeCor) {
-      state.aceitacaoSelecionada = valor;
-      document.querySelectorAll(".chip-aceitacao").forEach(b => {
-        b.classList.remove("chip-green-active", "chip-amber-active", "chip-red-active");
-      });
-      el.classList.add(classeCor);
-    }
-
-    function selecionarEstadoSaude(campo, valor, el, classeCor) {
-      if (campo === "evacuacao") {
-        state.evacuacaoSelecionada = valor;
-        document.querySelectorAll(".chip-evacuacao").forEach(b => {
-          b.classList.remove("chip-green-active", "chip-amber-active", "chip-active");
-        });
-      } else {
-        state.urinaSelecionada = valor;
-        document.querySelectorAll(".chip-urina").forEach(b => {
-          b.classList.remove("chip-green-active", "chip-amber-active", "chip-active");
-        });
-      }
-      el.classList.add(classeCor);
-    }
-
-    async function enviarPost(payload, btnId, textoOriginal) {
-      if (!state.colaborador) {
-        showToast("Selecione primeiro o(a) colaborador(a) no topo!");
-        return null;
-      }
-      const btn = document.getElementById(btnId);
-      btn.disabled = true;
-      btn.textContent = "Salvando...";
-      try {
-        const res = await fetch(state.scriptUrl, {
-          method: "POST",
-          body: JSON.stringify(payload)
-        });
-        const data = await res.json();
-        if (data.status !== "success") throw new Error(data.message || "Erro ao salvar");
-        showToast(data.message);
-        return data;
-      } catch (err) {
-        showToast("Erro: " + err.message);
-        return null;
-      } finally {
-        btn.disabled = false;
-        btn.textContent = textoOriginal;
-      }
-    }
-
-    /* --- MÓDULO 1: TURNOS --- */
-    async function salvarTurno() {
-      const payload = {
-        action: "registrar_turno",
-        colaborador: state.colaborador,
-        dataEntrada: document.getElementById("turnoDataEntrada").value,
-        horaEntrada: document.getElementById("turnoHoraEntrada").value,
-        dataSaida: document.getElementById("turnoDataSaida").value,
-        horaSaida: document.getElementById("turnoHoraSaida").value,
-        valorHora: document.getElementById("turnoValorHora").value,
-        notas: document.getElementById("turnoNotas").value
-      };
-      const res = await enviarPost(payload, "btnSalvarTurno", "Salvar Plantão na Planilha");
-      if (res && res.turnos) {
-        state.turnos = res.turnos;
-        document.getElementById("turnoNotas").value = "";
-        renderizarTurnos();
-      }
-    }
-
-    async function darBaixa(colaborador) {
-      if (!confirm(`Confirmar pagamento e dar baixa em todos os plantões em aberto de ${colaborador}?`)) return;
-      const hojeISO = new Date().toISOString().split("T")[0];
-      try {
-        setStatus(false, "Processando baixa...");
-        const res = await fetch(state.scriptUrl, {
-          method: "POST",
-          body: JSON.stringify({ action: "dar_baixa", colaborador, dataPagamento: hojeISO })
-        });
-        const data = await res.json();
-        if (data.status !== "success") throw new Error(data.message);
-        showToast(data.message);
-        state.turnos = data.turnos || [];
-        renderizarTurnos();
-        setStatus(true, "Planilha Conectada");
-      } catch (err) {
-        setStatus(true, "Planilha Conectada");
-        showToast("Erro: " + err.message);
-      }
-    }
-
-    function renderizarTurnos() {
-      const resumoEl = document.getElementById("resumoFinanceiro");
-      const listaEl  = document.getElementById("listaTurnos");
-      const totalEl  = document.getElementById("totalGeralAberto");
-
-      const abertosPorPessoa = {};
-      let totalGeral = 0;
-
-      state.turnos.forEach(t => {
-        if (t.status !== "Finalizado") {
-          if (!abertosPorPessoa[t.colaborador]) abertosPorPessoa[t.colaborador] = { qtd: 0, valor: 0 };
-          abertosPorPessoa[t.colaborador].qtd++;
-          abertosPorPessoa[t.colaborador].valor += Number(t.valor || 0);
-          totalGeral += Number(t.valor || 0);
-        }
-      });
-
-      totalEl.textContent = `R$ ${totalGeral.toFixed(2).replace(".", ",")}`;
-
-      const nomesAbertos = Object.keys(abertosPorPessoa);
-      resumoEl.innerHTML = nomesAbertos.length
-        ? nomesAbertos.map(nome => {
-            const item = abertosPorPessoa[nome];
-            return `<div class="flex items-center justify-between bg-slate-50 p-2.5 rounded-xl border border-slate-200">
-              <div>
-                <p class="font-bold text-xs text-slate-800">${nome}</p>
-                <p class="text-[11px] text-slate-500">${item.qtd} plantão(ões) • R$ ${item.valor.toFixed(2).replace(".", ",")}</p>
-              </div>
-              <button onclick="darBaixa('${nome}')" class="bg-slate-900 hover:bg-slate-800 text-white text-[11px] font-bold px-3 py-1.5 rounded-lg">
-                Dar Baixa
-              </button>
-            </div>`;
-          }).join("")
-        : `<p class="text-xs text-slate-400">Nenhum plantão pendente de pagamento.</p>`;
-
-      listaEl.innerHTML = state.turnos.map(t => `
-        <div class="p-2.5 rounded-xl border border-slate-100 bg-slate-50 flex items-center justify-between">
+      const lista = document.getElementById("listaRemedios");
+      lista.innerHTML = state.historicoRemedios.slice(0, 15).map(r => `
+        <div class="list-item">
           <div>
-            <span class="font-bold text-slate-800">${t.colaborador}</span>
-            <span class="text-slate-500"> • ${t.dataEntrada} (${t.horaEntrada} → ${t.horaSaida})</span>
-            ${t.notas ? `<p class="text-[11px] text-slate-500 mt-0.5">📝 ${t.notas}</p>` : ""}
-          </div>
-          <div class="text-right">
-            <span class="font-bold text-slate-800 block">R$ ${Number(t.valor).toFixed(2).replace(".", ",")}</span>
-            <span class="text-[10px] px-2 py-0.5 rounded-full font-semibold ${t.status === "Finalizado" ? "bg-emerald-100 text-emerald-800" : "bg-amber-100 text-amber-800"}">${t.status}</span>
+            <div class="item-main">${r.medicamento}</div>
+            <div class="item-sub">${r.data} às ${r.hora} • Por: ${r.colaborador}${r.observacoes ? " • " + r.observacoes : ""}</div>
           </div>
         </div>
-      `).join("");
+      `).join("") || `<div class="item-sub">Nenhum medicamento registrado.</div>`;
     }
 
-    /* --- MÓDULO 2: REMÉDIOS --- */
+    function renderAlimentacao() {
+      const lista = document.getElementById("listaAlimentacao");
+      lista.innerHTML = state.alimentacao.slice(0, 15).map(a => `
+        <div class="list-item">
+          <div>
+            <div class="item-main">${a.refeicao} — ${a.aceitacao}</div>
+            <div class="item-sub">${a.data} às ${a.hora} • Por: ${a.colaborador} • ${a.descricao}</div>
+          </div>
+        </div>
+      `).join("") || `<div class="item-sub">Nenhum registro alimentar.</div>`;
+    }
+
+    function renderSaude() {
+      const lista = document.getElementById("listaSaude");
+      lista.innerHTML = state.saude.slice(0, 15).map(s => {
+        const pa = (s.sistolica && s.diastolica) ? `PA: ${s.sistolica}/${s.diastolica}` : "";
+        const temp = s.temperatura ? ` • Temp: ${s.temperatura}°C` : "";
+        const glic = s.glicemia ? ` • Glic: ${s.glicemia}` : "";
+        return `
+          <div class="list-item">
+            <div>
+              <div class="item-main">${s.data} às ${s.hora} • ${s.colaborador}</div>
+              <div class="item-sub">${pa}${temp}${glic} • Evac: ${s.evacuacao} • Urina: ${s.urina}${s.notas ? " • " + s.notas : ""}</div>
+            </div>
+          </div>
+        `;
+      }).join("") || `<div class="item-sub">Nenhum registro de saúde.</div>`;
+    }
+
+    // ==========================================
+    // AÇÕES DE ENVIO
+    // ==========================================
+    async function salvarTurno() {
+      const colab = isGestor() ? state.selectedColab : state.currentUser.nome;
+      if (!colab) return alert("Selecione um colaborador.");
+
+      const btn = document.getElementById("btnSalvarTurno");
+      btn.disabled = true;
+      try {
+        const payload = {
+          action: "addTurno",
+          colaborador: colab,
+          dataEntrada: document.getElementById("tDataEntrada").value,
+          horaEntrada: document.getElementById("tHoraEntrada").value,
+          dataSaida: document.getElementById("tDataSaida").value,
+          horaSaida: document.getElementById("tHoraSaida").value,
+          notas: document.getElementById("tNotas").value,
+          isGestor: isGestor(),
+          valorManual: isGestor() ? document.getElementById("tValorManual").value : ""
+        };
+        const resp = await apiCall(payload);
+        if (resp.status !== "success") throw new Error(resp.message);
+        document.getElementById("tNotas").value = "";
+        showToast(resp.message);
+        await carregarDados();
+      } catch (e) {
+        alert("Erro ao salvar plantão: " + e.message);
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    async function darBaixa(nomeColaborador) {
+      if (!isGestor()) return;
+      if (!confirm(`Confirmar pagamento e dar baixa em todos os plantões abertos de ${nomeColaborador}?`)) return;
+      try {
+        const resp = await apiCall({ action: "darBaixa", colaborador: nomeColaborador });
+        if (resp.status !== "success") throw new Error(resp.message);
+        showToast(resp.message);
+        await carregarDados();
+      } catch (e) {
+        alert("Erro ao dar baixa: " + e.message);
+      }
+    }
+
     async function salvarRemedio() {
-      const medicamento = document.getElementById("remNome").value.trim();
-      if (!medicamento) return showToast("Informe o nome do medicamento.");
+      const med = document.getElementById("rMedicamento").value.trim();
+      if (!med) return alert("Informe o medicamento.");
+      const colab = isGestor() ? state.selectedColab : state.currentUser.nome;
 
-      const payload = {
-        action: "registrar_remedio",
-        colaborador: state.colaborador,
-        medicamento: medicamento,
-        data: document.getElementById("remData").value,
-        hora: document.getElementById("remHora").value,
-        observacoes: document.getElementById("remObs").value
-      };
-      const res = await enviarPost(payload, "btnSalvarRemedio", "Registrar Medicamento");
-      if (res && res.remedios) {
-        state.remedios = res.remedios;
-        document.getElementById("remNome").value = "";
-        document.getElementById("remObs").value = "";
-        preencherDatasHorasAtuais();
-        renderizarRemedios();
+      const resp = await apiCall({
+        action: "addRemedio",
+        medicamento: med,
+        colaborador: colab,
+        data: document.getElementById("rData").value,
+        hora: document.getElementById("rHora").value,
+        observacoes: document.getElementById("rObs").value
+      });
+      if (resp.status === "success") {
+        document.getElementById("rMedicamento").value = "";
+        document.getElementById("rObs").value = "";
+        showToast(resp.message);
+        await carregarDados();
       }
     }
 
-    function renderizarRemedios() {
-      const el = document.getElementById("listaRemedios");
-      el.innerHTML = state.remedios.length
-        ? state.remedios.map(r => `
-          <div class="p-2.5 rounded-xl border border-slate-100 bg-slate-50">
-            <div class="flex justify-between font-bold text-slate-800">
-              <span>💊 ${r.medicamento}</span>
-              <span class="text-emerald-700">${r.data} às ${r.hora}</span>
-            </div>
-            <p class="text-[11px] text-slate-500 mt-0.5">Aplicado por: <strong>${r.colaborador}</strong> ${r.observacoes ? `• ${r.observacoes}` : ""}</p>
-          </div>
-        `).join("")
-        : `<p class="text-slate-400">Nenhum medicamento registrado ainda.</p>`;
-    }
-
-    /* --- MÓDULO 3: ALIMENTAÇÃO --- */
     async function salvarAlimentacao() {
-      if (!state.refeicaoSelecionada) return showToast("Selecione o tipo de refeição.");
-      if (!state.aceitacaoSelecionada) return showToast("Selecione o grau de aceitação.");
+      const desc = document.getElementById("aDescricao").value.trim();
+      if (!desc) return alert("Descreva os alimentos.");
+      const colab = isGestor() ? state.selectedColab : state.currentUser.nome;
 
-      const payload = {
-        action: "registrar_alimentacao",
-        colaborador: state.colaborador,
-        refeicao: state.refeicaoSelecionada,
-        data: document.getElementById("alimData").value,
-        hora: document.getElementById("alimHora").value,
-        descricao: document.getElementById("alimDescricao").value,
-        aceitacao: state.aceitacaoSelecionada,
-        notas: document.getElementById("alimNotas").value
-      };
-      const res = await enviarPost(payload, "btnSalvarAlimentacao", "Registrar Alimentação");
-      if (res && res.alimentacao) {
-        state.alimentacao = res.alimentacao;
-        document.getElementById("alimDescricao").value = "";
-        document.getElementById("alimNotas").value = "";
-        preencherDatasHorasAtuais();
-        renderizarAlimentacao();
+      const resp = await apiCall({
+        action: "addAlimentacao",
+        refeicao: document.getElementById("aRefeicao").value,
+        aceitacao: document.getElementById("aAceitacao").value,
+        colaborador: colab,
+        data: document.getElementById("aData").value,
+        hora: document.getElementById("aHora").value,
+        descricao: desc,
+        notas: document.getElementById("aNotas").value
+      });
+      if (resp.status === "success") {
+        document.getElementById("aDescricao").value = "";
+        document.getElementById("aNotas").value = "";
+        showToast(resp.message);
+        await carregarDados();
       }
     }
 
-    function renderizarAlimentacao() {
-      const el = document.getElementById("listaAlimentacao");
-      el.innerHTML = state.alimentacao.length
-        ? state.alimentacao.map(a => `
-          <div class="p-2.5 rounded-xl border border-slate-100 bg-slate-50">
-            <div class="flex justify-between font-bold text-slate-800">
-              <span>🍽️ ${a.refeicao} — <span class="text-emerald-700">${a.aceitacao}</span></span>
-              <span class="text-slate-500">${a.data} ${a.hora}</span>
-            </div>
-            ${a.descricao ? `<p class="text-slate-700 mt-0.5">${a.descricao}</p>` : ""}
-            <p class="text-[11px] text-slate-500 mt-0.5">Por: <strong>${a.colaborador}</strong> ${a.notas ? `• ${a.notas}` : ""}</p>
-          </div>
-        `).join("")
-        : `<p class="text-slate-400">Nenhuma refeição registrada ainda.</p>`;
-    }
-
-    /* --- MÓDULO 4: DIÁRIO DE SAÚDE --- */
     async function salvarSaude() {
-      const payload = {
-        action: "registrar_saude",
-        colaborador: state.colaborador,
-        data: document.getElementById("saudeData").value,
-        hora: document.getElementById("saudeHora").value,
-        sistolica: document.getElementById("saudeSistolica").value,
-        diastolica: document.getElementById("saudeDiastolica").value,
-        glicemia: document.getElementById("saudeGlicemia").value,
-        temperatura: document.getElementById("saudeTemperatura").value,
-        evacuacao: state.evacuacaoSelecionada,
-        urina: state.urinaSelecionada,
-        notas: document.getElementById("saudeNotas").value
-      };
-      const res = await enviarPost(payload, "btnSalvarSaude", "Registrar Diário de Saúde");
-      if (res && res.saude) {
-        state.saude = res.saude;
-        document.getElementById("saudeSistolica").value = "";
-        document.getElementById("saudeDiastolica").value = "";
-        document.getElementById("saudeGlicemia").value = "";
-        document.getElementById("saudeTemperatura").value = "";
-        document.getElementById("saudeNotas").value = "";
-        preencherDatasHorasAtuais();
-        renderizarSaude();
+      const colab = isGestor() ? state.selectedColab : state.currentUser.nome;
+
+      const resp = await apiCall({
+        action: "addSaude",
+        colaborador: colab,
+        data: document.getElementById("sData").value,
+        hora: document.getElementById("sHora").value,
+        sistolica: document.getElementById("sSistolica").value,
+        diastolica: document.getElementById("sDiastolica").value,
+        temperatura: document.getElementById("sTemp").value,
+        glicemia: document.getElementById("sGlicemia").value,
+        evacuacao: document.getElementById("sEvacuacao").value,
+        urina: document.getElementById("sUrina").value,
+        notas: document.getElementById("sNotas").value
+      });
+      if (resp.status === "success") {
+        ["sSistolica", "sDiastolica", "sTemp", "sGlicemia", "sNotas"].forEach(id => document.getElementById(id).value = "");
+        showToast(resp.message);
+        await carregarDados();
       }
-    }
-
-    function renderizarSaude() {
-      const el = document.getElementById("listaSaude");
-      el.innerHTML = state.saude.length
-        ? state.saude.map(s => {
-          const sinais = [];
-          if (s.sistolica && s.diastolica) sinais.push(`PA: ${s.sistolica}/${s.diastolica}`);
-          if (s.glicemia) sinais.push(`Glic: ${s.glicemia}`);
-          if (s.temperatura) sinais.push(`Temp: ${s.temperatura}ºC`);
-          if (s.evacuacao) sinais.push(`Evac: ${s.evacuacao}`);
-          if (s.urina) sinais.push(`Urina: ${s.urina}`);
-
-          return `<div class="p-2.5 rounded-xl border border-slate-100 bg-slate-50">
-            <div class="flex justify-between font-bold text-slate-800">
-              <span>🩺 ${s.data} às ${s.hora}</span>
-              <span class="text-slate-500 font-normal">Por: <strong>${s.colaborador}</strong></span>
-            </div>
-            <p class="text-slate-700 mt-1 font-medium">${sinais.join(" • ") || "Registro clínico"}</p>
-            ${s.notas ? `<p class="text-[11px] text-slate-500 mt-0.5">📝 ${s.notas}</p>` : ""}
-          </div>`;
-        }).join("")
-        : `<p class="text-slate-400">Nenhum registro de saúde ainda.</p>`;
     }
   </script>
 </body>
